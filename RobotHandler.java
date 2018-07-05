@@ -23,22 +23,37 @@ public class RobotHandler implements IRobotActors, SensorData {
 
 	@Override
 	public void driveForward() {
-
+		if (blockedFront())
+			throw new IllegalStateException("Front is blocked");
+		switch (orientation) {
+			case EAST:
+				pos.addToX(-1);
+				break;
+			case WEST:
+				pos.addToX(1);
+				break;
+			case NORTH:
+				pos.addToY(1);
+				break;
+			case SOUTH:
+				pos.addToY(-1);
+				break;
+		}
 	}
 
 	@Override
 	public void turnLeft() {
-
+		orientation = Orientation.rotateLeft(orientation);
 	}
 
 	@Override
 	public void turnRight() {
-
+		orientation = Orientation.rotateRight(orientation);
 	}
 
 	@Override
 	public void startUnload() {
-
+		// TODO
 	}
 
 	@Override
@@ -48,8 +63,7 @@ public class RobotHandler implements IRobotActors, SensorData {
 
 	@Override
 	public PositionType posType() {
-		// TODO
-		return null;
+		return grid.posType(pos);
 	}
 
 	@Override
@@ -59,20 +73,20 @@ public class RobotHandler implements IRobotActors, SensorData {
 
 	@Override
 	public boolean blockedFront() {
-		// TODO
-		return false;
+		boolean[] neighbors = grid.areNeighborsBlocked(pos);
+		return getRotatedNeighbor(neighbors, Direction.AHEAD, orientation);
 	}
 
 	@Override
 	public boolean blockedLeft() {
-		// TODO
-		return false;
+		boolean[] neighbors = grid.areNeighborsBlocked(pos);
+		return getRotatedNeighbor(neighbors, Direction.LEFT, orientation);
 	}
 
 	@Override
 	public boolean blockedRight() {
-		// TODO
-		return false;
+		boolean[] neighbors = grid.areNeighborsBlocked(pos);
+		return getRotatedNeighbor(neighbors, Direction.RIGHT, orientation);
 	}
 
 	@Override
@@ -103,5 +117,11 @@ public class RobotHandler implements IRobotActors, SensorData {
 	public boolean blockedCrossroadRight() {
 		// TODO
 		return false;
+	}
+
+	public static boolean getRotatedNeighbor(boolean[] neighbors, Direction dir, Orientation orientation) {
+		int dirIndex = dir.getValue();
+		int orientIndex = orientation.getValue();
+		return neighbors[(dirIndex + orientIndex) % 4];
 	}
 }

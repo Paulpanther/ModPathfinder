@@ -8,30 +8,66 @@ public class Grid {
 
 	private RobotHandler handler;
 
-	private final int size_x = 100, size_y = 100;
+	public static final int SIZE_X = 100, SIZE_Y = 100;
 
 
-	private Grid() {
+	public Grid() {
 		handler = new RobotHandler(this);
 	}
 
 	public boolean[] areNeighborsBlocked(Position pos) {
-		boolean[] neighbors = new boolean[4];
-		if (pos.getY() <= 6) {  // In Station
+		boolean[] neighbors = new boolean[]{
+				false, false, false, false
+		};
 
-		} else {
-			if (pos.getX() == 1)
+		// Common Cases
+		if (pos.getX() % 3 == 1 && pos.getY() % 3 == 2)
+			neighbors[0] = true;
+		if (pos.getX() % 3 == 0 && pos.getY() % 3 == 1)
+			neighbors[1] = true;
+		if (pos.getX() % 3 == 2 && pos.getY() % 3 == 2)
+			neighbors[2] = true;
+		if (pos.getX() % 3 == 0 && pos.getY() % 3 == 0)
+			neighbors[3] = true;
+
+		// Override Values in special cases
+		if (pos.getY() < 6) {  // In Station
+			if (pos.getY() == 5 || pos.getY() == 4) {
 				neighbors[0] = true;
-			if (pos.getX() == size_x - 1)
 				neighbors[2] = true;
-			if (pos.getY() == size_y - 1)
-				neighbors[1] = true;
+			} else if (pos.getY() < 4 && pos.getY() > 0) {
+				if (pos.getX() % 3 == 1 || pos.getX() % 3 == 2)
+					neighbors[2] = true;
+				if (pos.getX() % 3 == 2)
+					neighbors[0] = true;
+				if (pos.getX() % 3 == 0) {
+					neighbors[0] = true;
+					neighbors[1] = true;
+					neighbors[3] = true;
+				}
+			} else if (pos.getY() == 0) {
+				neighbors[3] = true;
+				if (pos.getX() % 3 == 1)
+					neighbors[0] = true;
+				if (pos.getX() % 3 == 2)
+					neighbors[2] = true;
+			}
 		}
+		if (pos.getX() == 1)
+			neighbors[0] = true;
+		if (pos.getX() == SIZE_X - 1)
+			neighbors[2] = true;
+		if (pos.getY() == SIZE_Y - 1)
+			neighbors[1] = true;
 
 		return neighbors;
 	}
 
-	public static void main(String[] args) {
-		new Grid();
+	public PositionType posType(Position pos) {
+		if (pos.getY() < 6 && pos.getX() % 3 != 2 || pos.getY() < 5)
+			return PositionType.STATION;
+		if (pos.getX() % 3 == 0 || pos.getY() == 2)
+			return PositionType.WAYPOINT;
+		return PositionType.CROSSROADS;
 	}
 }
