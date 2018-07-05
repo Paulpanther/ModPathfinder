@@ -1,5 +1,7 @@
 package de.mod10.smp;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 /**
  * @author Paul
  * @since 04.07.2018
@@ -7,18 +9,22 @@ package de.mod10.smp;
 public class RobotHandler implements IRobotActors, SensorData {
 
 	private Robot robot;
-	private SensorData data;
 	private Grid grid;
 
 	private Position pos;
 	private Orientation orientation;
 
 
-	public RobotHandler(Grid grid) {
+	public RobotHandler(Grid grid, Position initPos) {
 		this.grid = grid;
+		this.pos = initPos;
 
 		robot = new Robot();
 		robot.sensorEvent(this);
+	}
+
+	public void driveTo(Position pos) {
+		robot.driveTo(pos);
 	}
 
 	@Override
@@ -54,6 +60,7 @@ public class RobotHandler implements IRobotActors, SensorData {
 	@Override
 	public void startUnload() {
 		// TODO
+		throw new NotImplementedException();
 	}
 
 	@Override
@@ -92,31 +99,31 @@ public class RobotHandler implements IRobotActors, SensorData {
 	@Override
 	public boolean blockedWaypointFront() {
 		// TODO
-		return false;
+		throw new NotImplementedException();
 	}
 
 	@Override
 	public boolean blockedWaypointLeft() {
 		// TODO
-		return false;
+		throw new NotImplementedException();
 	}
 
 	@Override
 	public boolean blockedWaypointRight() {
 		// TODO
-		return false;
+		throw new NotImplementedException();
 	}
 
 	@Override
 	public boolean blockedCrossroadFront() {
 		// TODO
-		return false;
+		throw new NotImplementedException();
 	}
 
 	@Override
 	public boolean blockedCrossroadRight() {
 		// TODO
-		return false;
+		throw new NotImplementedException();
 	}
 
 	public static boolean getRotatedNeighbor(boolean[] neighbors, Direction dir, Orientation orientation) {

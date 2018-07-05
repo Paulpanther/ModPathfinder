@@ -1,18 +1,27 @@
 package de.mod10.smp;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Paul
  * @since 04.07.2018
  */
 public class Grid {
 
-	private RobotHandler handler;
+	private List<RobotHandler> handler;
 
 	public static final int SIZE_X = 100, SIZE_Y = 100;
 
 
 	public Grid() {
-		handler = new RobotHandler(this);
+		handler = new ArrayList<>();
+	}
+
+	public RobotHandler registerRobotHandler(Position initPos) {
+		RobotHandler robot = new RobotHandler(this, initPos);
+		handler.add(robot);
+		return robot;
 	}
 
 	public boolean[] areNeighborsBlocked(Position pos) {
