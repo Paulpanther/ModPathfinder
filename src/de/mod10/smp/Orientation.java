@@ -40,4 +40,22 @@ public enum Orientation {
 				throw new IllegalArgumentException();
 		}
 	}
+
+	public static Direction getRelativeDirection(Orientation heading, Orientation target) {
+		int diff = heading.getValue() - target.getValue();
+		while (diff < 0)
+			diff += 4;
+		switch (diff) {
+			case 0:
+				return Direction.AHEAD;
+			case 1:
+				return Direction.RIGHT;
+			case 2:
+				return Direction.BEHIND;
+			case 3:
+				return Direction.LEFT;
+			default:
+				throw new IllegalStateException();
+		}
+	}
 }
