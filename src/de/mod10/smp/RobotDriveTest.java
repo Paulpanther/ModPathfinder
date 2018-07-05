@@ -43,9 +43,17 @@ public class RobotDriveTest {
 	}
 
 	@Test
-	void testDriveFromStationStartToBatterie() {
-		RobotHandler handler = grid.registerRobotHandler(new Position(4, 5));
-		Position end = new Position(3, 2);
+	void testDriveFromStationStartToDropNorthThanWest() {
+		RobotHandler handler = grid.registerRobotHandler(new Position(5, 5));
+		Position end = new Position(9, 12);
+		handler.driveTo(end);
+		assertEquals(end, handler.pos());
+	}
+
+	@Test
+	void testDriveFromStationStartToDropNorthThanEast() {
+		RobotHandler handler = grid.registerRobotHandler(new Position(8, 5));
+		Position end = new Position(3, 12);
 		handler.driveTo(end);
 		assertEquals(end, handler.pos());
 	}
