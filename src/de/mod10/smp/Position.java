@@ -31,6 +31,10 @@ public class Position {
 		this.y += y;
 	}
 
+	public static Position add(Position p1, Position p2) {
+		return new Position(p1.getX() + p2.getX(), p1.getY() + p2.getY());
+	}
+
 	public int getX() {
 		return x;
 	}

@@ -47,11 +47,14 @@ public class Grid {
 			} else if (pos.getY() < 4 && pos.getY() > 0) {
 				if (pos.getX() % 3 == 1 || pos.getX() % 3 == 2)
 					neighbors[2] = true;
+				if (pos.getX() % 3 == 1)
+					neighbors[0] = false;
 				if (pos.getX() % 3 == 2)
 					neighbors[0] = true;
 				if (pos.getX() % 3 == 0) {
 					neighbors[0] = true;
 					neighbors[1] = true;
+					neighbors[2] = false;
 					neighbors[3] = true;
 				}
 			} else if (pos.getY() == 0) {
@@ -75,7 +78,9 @@ public class Grid {
 	public PositionType posType(Position pos) {
 		if (pos.getY() < 6 && pos.getX() % 3 != 2 || pos.getY() < 5)
 			return PositionType.STATION;
-		if (pos.getX() % 3 == 0 || pos.getY() == 2)
+		if (pos.getX() % 3 == 0 || pos.getY() % 3 == 2)
+			return PositionType.WAYPOINT;
+		if (pos.getY() == 5 && pos.getX() % 3 == 2)
 			return PositionType.WAYPOINT;
 		return PositionType.CROSSROADS;
 	}

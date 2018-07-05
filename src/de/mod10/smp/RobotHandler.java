@@ -12,14 +12,14 @@ public class RobotHandler implements IRobotActors, SensorData {
 	private Grid grid;
 
 	private Position pos;
-	private Orientation orientation;
+	private Orientation orientation = Orientation.NORTH;
 
 
 	public RobotHandler(Grid grid, Position initPos) {
 		this.grid = grid;
 		this.pos = initPos;
 
-		robot = new Robot();
+		robot = new Robot(this);
 		robot.sensorEvent(this);
 	}
 
@@ -32,10 +32,10 @@ public class RobotHandler implements IRobotActors, SensorData {
 		if (blockedFront())
 			throw new IllegalStateException("Front is blocked");
 		switch (orientation) {
-			case EAST:
+			case WEST:
 				pos.addToX(-1);
 				break;
-			case WEST:
+			case EAST:
 				pos.addToX(1);
 				break;
 			case NORTH:

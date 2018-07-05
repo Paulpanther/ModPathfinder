@@ -18,24 +18,33 @@ public enum Orientation {
 		return orientation;
 	}
 
+	@SuppressWarnings("Duplicates")
 	public static Orientation rotateLeft(Orientation orientation) {
-		return turn(orientation, EAST, NORTH, WEST, SOUTH);
-	}
-
-	public static Orientation rotateRight(Orientation orientation) {
-		return turn(orientation, WEST, SOUTH, EAST, NORTH);
-	}
-
-	private static Orientation turn(Orientation orientation, Orientation west, Orientation south, Orientation east, Orientation north) {
 		switch (orientation) {
 			case NORTH:
-				return west;
+				return WEST;
 			case WEST:
-				return south;
+				return SOUTH;
 			case SOUTH:
-				return east;
+				return EAST;
 			case EAST:
-				return north;
+				return NORTH;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@SuppressWarnings("Duplicates")
+	public static Orientation rotateRight(Orientation orientation) {
+		switch (orientation) {
+			case NORTH:
+				return EAST;
+			case WEST:
+				return NORTH;
+			case SOUTH:
+				return WEST;
+			case EAST:
+				return SOUTH;
 			default:
 				throw new IllegalArgumentException();
 		}
@@ -49,11 +58,11 @@ public enum Orientation {
 			case 0:
 				return Direction.AHEAD;
 			case 1:
-				return Direction.RIGHT;
+				return Direction.LEFT;
 			case 2:
 				return Direction.BEHIND;
 			case 3:
-				return Direction.LEFT;
+				return Direction.RIGHT;
 			default:
 				throw new IllegalStateException();
 		}

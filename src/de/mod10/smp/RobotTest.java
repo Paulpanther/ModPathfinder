@@ -13,20 +13,27 @@ class RobotTest {
 
 	@BeforeEach
 	void setUp() {
-		robot = new Robot();
+		robot = new Robot(null);
 		robot.sensorEvent(new SensorHandler());
 	}
 
 	@Test
-	void targetDirection() {
+	void targetDirectionTest() {
+		pos = new Position(8, 11);
+		posOrientation = Orientation.NORTH;
+		assertEquals(Direction.AHEAD, robot.targetDirection(new Position(6, 13)));
+
 		pos = new Position(8, 12);
 		posOrientation = Orientation.NORTH;
-		robot.driveTo(new Position(6, 13));
-		assertEquals(Direction.L robot.targetDirection();
-	}
+		assertEquals(Direction.AHEAD, robot.targetDirection(new Position(6, 13)));
 
-	@Test
-	void targetOrientation() {
+		pos = new Position(8, 13);
+		posOrientation = Orientation.NORTH;
+		assertEquals(Direction.LEFT, robot.targetDirection(new Position(6, 13)));
+
+		pos = new Position(9, 15);
+		posOrientation = Orientation.WEST;
+		assertEquals(Direction.AHEAD, robot.targetDirection(new Position(6, 13)));
 	}
 
 	private class SensorHandler implements SensorData {
