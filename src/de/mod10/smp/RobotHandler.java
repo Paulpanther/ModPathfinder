@@ -27,6 +27,10 @@ public class RobotHandler implements IRobotActors, SensorData {
 		robot.driveTo(pos);
 	}
 
+	public void step() {
+		robot.step();
+	}
+
 	@Override
 	public void driveForward() {
 		if (blockedFront())

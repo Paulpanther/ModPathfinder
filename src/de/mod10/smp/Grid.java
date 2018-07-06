@@ -11,7 +11,7 @@ public class Grid {
 
 	private List<RobotHandler> handler;
 
-	public static final int SIZE_X = 100, SIZE_Y = 100;
+	public static final int SIZE_X = 30, SIZE_Y = 30;
 
 
 	public Grid() {
@@ -76,6 +76,8 @@ public class Grid {
 	}
 
 	public PositionType posType(Position pos) {
+		if (pos.getX() == 0 || (pos.getY() == 5 || pos.getY() == 4 || pos.getY() == 0) && pos.getX() % 3 == 0)
+			return PositionType.BLOCK;
 		if (pos.getY() < 6 && pos.getX() % 3 != 2 || pos.getY() < 5)
 			return PositionType.STATION;
 		if (pos.getX() % 3 == 0 || pos.getY() % 3 == 2)
@@ -83,5 +85,21 @@ public class Grid {
 		if (pos.getY() == 5 && pos.getX() % 3 == 2)
 			return PositionType.WAYPOINT;
 		return PositionType.CROSSROADS;
+	}
+
+	public List<RobotHandler> getRobots() {
+		return handler;
+	}
+
+	public boolean isBattery(Position pos) {
+		return pos.getY() < 4 && pos.getY() > 0 && pos.getX() % 3 == 0;
+	}
+
+	public boolean isDrop(Position pos) {
+		return pos.getY() > 6 && pos.getY() % 3 == 2 && pos.getX() % 3 == 0 && pos.getX() != 0;
+	}
+
+	public boolean isFill(Position pos) {
+		return pos.getY() == 5 && pos.getX() % 3 == 0 && pos.getX() != 0;
 	}
 }

@@ -19,14 +19,19 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 	public void driveTo(Position target) {
 		this.target = target;
 
-		if (data != null) {
-			while (!target.equals(data.pos())) {
-				step();
-			}
-		}
+		// TODO Uncomment this for Tests
+
+//		if (data != null) {
+//			while (!target.equals(data.pos())) {
+//				step();
+//			}
+//		}
 	}
 
 	public void step() {
+		if (target == null)
+			return;
+
 		boolean moved = false;
 
 		PositionType type = data.posType();
