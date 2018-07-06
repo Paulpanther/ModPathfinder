@@ -12,7 +12,6 @@ public class ServerRobotHandler {
 
 	public void addRobot() {
 		RobotHandler robot = grid.registerRobotHandler(new Position(2, 5));
-		robot.driveTo(new Position(30, 30));
 	}
 
 	public void step() {

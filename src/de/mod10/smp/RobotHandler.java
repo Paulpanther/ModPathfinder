@@ -2,6 +2,8 @@ package de.mod10.smp;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.awt.*;
+
 /**
  * @author Paul
  * @since 04.07.2018
@@ -10,6 +12,7 @@ public class RobotHandler implements IRobotActors, SensorData {
 
 	private Robot robot;
 	private Grid grid;
+	private Color color = Color.RED;
 
 	private Position pos;
 	private Orientation orientation = Orientation.NORTH;
@@ -21,6 +24,14 @@ public class RobotHandler implements IRobotActors, SensorData {
 
 		robot = new Robot(this);
 		robot.sensorEvent(this);
+	}
+
+	public Color getColor() {
+		return color;
+	}
+
+	public void setColor(Color color) {
+		this.color = color;
 	}
 
 	public void driveTo(Position pos) {

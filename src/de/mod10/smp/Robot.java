@@ -8,7 +8,7 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 
 	private SensorData data;
 	private RobotState state = RobotState.DEFAULT;
-	private Position target;
+	private Position target = null;
 	private IRobotActors actor;
 
 
@@ -29,7 +29,7 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 	}
 
 	public void step() {
-		if (target == null)
+		if (target == null || target.equals(data.pos()))
 			return;
 
 		boolean moved = false;

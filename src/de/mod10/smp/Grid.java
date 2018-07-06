@@ -1,5 +1,7 @@
 package de.mod10.smp;
 
+import javafx.geometry.Pos;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,10 +89,6 @@ public class Grid {
 		return PositionType.CROSSROADS;
 	}
 
-	public List<RobotHandler> getRobots() {
-		return handler;
-	}
-
 	public boolean isBattery(Position pos) {
 		return pos.getY() < 4 && pos.getY() > 0 && pos.getX() % 3 == 0;
 	}
@@ -101,5 +99,17 @@ public class Grid {
 
 	public boolean isFill(Position pos) {
 		return pos.getY() == 5 && pos.getX() % 3 == 0 && pos.getX() != 0;
+	}
+
+	public RobotHandler isRobot(Position pos) {
+		for (RobotHandler robot : handler) {
+			if (robot.pos().equals(pos))
+				return robot;
+		}
+		return null;
+	}
+
+	public List<RobotHandler> getRobots() {
+		return handler;
 	}
 }
