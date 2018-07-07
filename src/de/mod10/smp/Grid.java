@@ -204,6 +204,66 @@ public class Grid {
 		return null;
 	}
 
+	public int getBatteryCount() {
+		return (int) Math.ceil(SIZE_X / 3f) * 3;
+	}
+
+	public RobotHandler spawnRobotOnBattery(int bat) {
+		Position batPos = getBatteryPosition(bat);
+		return registerRobotHandler(batPos);
+	}
+
+	public void moveRobotToBattery(int bat, RobotHandler robot) {
+		Position station = getStationOfBattery(bat);
+		robot.driveInStation(station, getBatteryPosition(bat));
+	}
+
+	public void moveRobotToFill(int fill, RobotHandler robot) {
+		Position station = getStationOfFill(fill);
+		robot.driveInStation(station, getFillPosition(fill));
+	}
+
+	public void moveRobotToDrop(int drop, RobotHandler robot) {
+		robot.driveTo(getDropPosition(drop));
+	}
+
+	public int getDropCount() {
+		return dropsPerColumn() * dropsPerRow();
+	}
+
+	private Position getDropPosition(int drop) {
+		return new Position(drop / dropsPerColumn() + 3, (drop % dropsPerColumn()) + 9);
+	}
+
+	private int dropsPerColumn() {
+		return (int) (Math.ceil(Math.max(SIZE_Y - 9, 0) / 3f));
+	}
+
+	private int dropsPerRow() {
+		return (int) (Math.ceil(SIZE_X / 3f) - 1);
+	}
+
+	public int getFillCount() {
+		return (int) Math.ceil(SIZE_X / 3f) - 1;
+	}
+
+	public Position getFillPosition(int fill) {
+		return new Position(fill * 3 + 2, 5);
+	}
+
+	private Position getStationOfFill(int fill) {
+		return new Position(fill * 3 + 1, 5);
+	}
+
+	private Position getBatteryPosition(int bat) {
+		return new Position(bat / 3 * 3, (bat % 3) + 1);
+	}
+
+	private Position getStationOfBattery(int bat) {
+		Position batPos = getBatteryPosition(bat);
+		return new Position(batPos.getX() + 1, 5);
+	}
+
 	public boolean isValidMove(Position pos) {
 		return isStationStart(pos) || isBattery(pos) || posType(pos) == PositionType.WAYPOINT;
 	}

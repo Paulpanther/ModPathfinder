@@ -9,7 +9,7 @@ import de.mod10.smp.helper.*;
 public class Robot implements ISensorInfo, IRobotActorInfo {
 
 	private SensorData data;
-	private RobotState state = RobotState.WAYPOINT;
+	private RobotState state = RobotState.FROM_BATTERY;
 	private Position target = null;
 	private IRobotActors actor;
 
@@ -20,14 +20,6 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 
 	public void driveTo(Position target) {
 		this.target = target;
-
-		// TODO Uncomment this for Tests
-
-//		if (data != null) {
-//			while (!target.equals(data.pos())) {
-//				step();
-//			}
-//		}
 	}
 
 	public void step() {
@@ -62,23 +54,26 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 					actor.driveForward();
 				actor.turnLeft();
 			} else {
-				if (!data.blockedFront()) {
+				if (!data.blockedFront() && isCrossroadOpen()) {
 					actor.driveForward();
 					state = RobotState.CROSS_RIGHT_UP_LEFT;
 				}
 			}
 		} else if (state == RobotState.CROSS_RIGHT_UP_LEFT) {
 			Direction dir = Orientation.getRelativeDirection(data.posOrientation(), targetOrientation());
-			if (dir == Direction.RIGHT) {
-				actor.turnRight();
-				if (!data.blockedFront()) {
-					actor.driveForward();
-					state = RobotState.WAYPOINT;
-				}
-			} else {
-				if (!data.blockedFront()) {
-					actor.driveForward();
-					state = RobotState.CROSS_LEFT_UP;
+
+			if (!blockedWaypoint(dir)) {
+				if (dir == Direction.RIGHT) {
+					actor.turnRight();
+					if (!data.blockedFront()) {
+						actor.driveForward();
+						state = RobotState.WAYPOINT;
+					}
+				} else {
+					if (!data.blockedFront()) {
+						actor.driveForward();
+						state = RobotState.CROSS_LEFT_UP;
+					}
 				}
 			}
 		} else if (state == RobotState.CROSS_LEFT_UP) {
@@ -94,6 +89,34 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 					actor.driveForward();
 				}
 			}
+		}
+	}
+
+	private boolean isCrossroadOpen() {
+		boolean left = data.blockedWaypointLeft();
+		boolean ahead = data.blockedWaypointFront();
+		boolean right = data.blockedWaypointRight();
+
+		if (!left && !ahead && !right) {
+			return true;
+		} else if (left && ahead && right) {
+			throw new IllegalStateException("DEADLOCK");
+		} else if (ahead && !left && !right) {
+			Orientation orient = data.posOrientation();
+			return orient == Orientation.EAST || orient == Orientation.NORTH;
+		} else return !right;
+	}
+
+	private boolean blockedWaypoint(Direction dir) {
+		switch (dir) {
+			case AHEAD:
+				return data.blockedWaypointFront();
+			case LEFT:
+				return data.blockedWaypointLeft();
+			case RIGHT:
+				return data.blockedCrossroadRight();
+			default:
+				return false;
 		}
 	}
 

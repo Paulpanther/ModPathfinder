@@ -16,6 +16,8 @@ public class RobotHandler implements IRobotActors, SensorData {
 
 	private Position pos;
 	private Orientation orientation = Orientation.NORTH;
+	private Position target, station;
+	private boolean driving = false;
 
 
 	public RobotHandler(Grid grid, Position initPos) {
@@ -36,10 +38,29 @@ public class RobotHandler implements IRobotActors, SensorData {
 
 	public void driveTo(Position pos) {
 		robot.driveTo(pos);
+		driving = true;
+	}
+
+	public boolean isDriving() {
+		return driving;
 	}
 
 	public void step() {
+		if (pos.equals(station)) {
+			driveTo(target);
+			station = null;
+		}
+		if (pos.equals(target)) {
+			driving = false;
+		}
 		robot.step();
+	}
+
+	public void driveInStation(Position station, Position next) {
+		driving = true;
+		this.station = station;
+		this.target = next;
+		driveTo(station);
 	}
 
 	@Override
