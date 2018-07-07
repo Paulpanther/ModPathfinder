@@ -1,5 +1,6 @@
 package de.mod10.smp;
 
+import de.mod10.smp.helper.*;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.awt.*;

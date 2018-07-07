@@ -1,5 +1,9 @@
 package de.mod10.smp;
 
+import de.mod10.smp.helper.Orientation;
+import de.mod10.smp.helper.Position;
+import de.mod10.smp.helper.PositionType;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;

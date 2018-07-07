@@ -1,6 +1,7 @@
 package de.mod10.smp;
 
-import javafx.geometry.Pos;
+import de.mod10.smp.helper.Position;
+import de.mod10.smp.helper.PositionType;
 
 import java.util.ArrayList;
 import java.util.List;

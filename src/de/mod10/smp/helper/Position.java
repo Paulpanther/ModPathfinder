@@ -1,4 +1,4 @@
-package de.mod10.smp;
+package de.mod10.smp.helper;
 
 import java.util.Objects;
 

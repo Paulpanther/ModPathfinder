@@ -1,5 +1,8 @@
-package de.mod10.smp;
+package de.mod10.smp.tests;
 
+import de.mod10.smp.Grid;
+import de.mod10.smp.helper.Position;
+import de.mod10.smp.RobotHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

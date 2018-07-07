@@ -1,5 +1,7 @@
 package de.mod10.smp;
 
+import de.mod10.smp.helper.Position;
+
 import java.util.List;
 
 public class ServerRobotHandler {
