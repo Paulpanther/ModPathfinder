@@ -67,4 +67,23 @@ public enum Orientation {
 				throw new IllegalStateException();
 		}
 	}
+
+	public static Orientation getRotatedOrientation(Orientation heading, Direction rotation) {
+		int newO = (heading.getValue() + rotation.getValue()) % 4;
+		while (newO < 0)
+			newO += 4;
+
+		switch (newO) {
+			case 0:
+				return Orientation.WEST;
+			case 1:
+				return Orientation.NORTH;
+			case 2:
+				return Orientation.EAST;
+			case 3:
+				return Orientation.SOUTH;
+			default:
+				throw new IllegalStateException();
+		}
+	}
 }

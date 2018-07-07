@@ -1,9 +1,12 @@
 package de.mod10.smp;
 
+import de.mod10.smp.helper.Direction;
+import de.mod10.smp.helper.Orientation;
 import de.mod10.smp.helper.Position;
 import de.mod10.smp.helper.PositionType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -25,6 +28,92 @@ public class Grid {
 		RobotHandler robot = new RobotHandler(this, initPos);
 		handler.add(robot);
 		return robot;
+	}
+
+	public boolean blockedWaypoint(Position pos, Orientation orient, Direction dir) {
+		if (posType(pos) == PositionType.WAYPOINT) {
+			Position cross = nextCrossroad(pos, orient);
+			Orientation to = Orientation.getRotatedOrientation(orient, dir);
+			Position waypoint = crossroadWaypointIn(cross, to);
+			return isRobot(waypoint) != null;
+
+		} else if (posType(pos) == PositionType.CROSSROADS) {
+			Position cross = onCrossroad(pos);
+			Orientation to = Orientation.getRotatedOrientation(orient, dir);
+			Position waypoint = crossroadWaypointOut(cross, to);
+			return isRobot(waypoint) != null;
+		}
+		return false;
+	}
+
+	public boolean blockedCrossroadFront(Position pos, Orientation orient) {
+		Position cross = nextCrossroad(pos, orient);
+
+		for (Position crossPosDelta : crossroadDeltaPositions()) {
+			Position crossPos = Position.add(crossPosDelta, cross);
+			if (!crossPos.equals(pos) && isRobot(crossPos) != null)
+				return true;
+		}
+		return false;
+	}
+
+	private Position[] crossroadDeltaPositions() {
+		return new Position[] {
+				new Position(1, 0),
+				new Position(1, 1),
+				new Position(0, 1),
+				new Position(0, 0)
+		};
+	}
+
+	private Position crossroadWaypointIn(Position cross, Orientation orient) {
+		Position[] delta = {
+				new Position(-2, 0),
+				new Position(-1, 2),
+				new Position(1, 1),
+				new Position(0, -1)
+		};
+		return Position.add(cross, delta[orient.getValue()]);
+	}
+
+	private Position crossroadWaypointOut(Position cross, Orientation orient) {
+		Position[] delta = {
+				new Position(-2, 1),
+				new Position(0, 2),
+				new Position(1, 0),
+				new Position(-1, -1)
+		};
+		return Position.add(cross, delta[orient.getValue()]);
+	}
+
+	private Position onCrossroad(Position pos) {
+		return new Position(pos.getX() / 3 * 3 + 2, pos.getY() / 3 * 3);
+	}
+
+	private Position nextCrossroad(Position pos, Orientation orient) {
+		Position next = nextPosition(pos, orient);
+		return new Position(next.getX() / 3 * 3 + 2, next.getY() / 3 * 3);
+	}
+
+	public Position nextPosition(Position pos, Orientation orient) {
+		Position delta;
+		switch (orient) {
+			case NORTH:
+				delta = new Position(0, 1);
+				break;
+			case WEST:
+				delta = new Position(-1, 0);
+				break;
+			case EAST:
+				delta = new Position(1, 0);
+				break;
+			case SOUTH:
+				delta = new Position(0, -1);
+				break;
+			default:
+				throw new IllegalStateException();
+		}
+		return Position.add(delta, pos);
 	}
 
 	public boolean[] areNeighborsBlocked(Position pos) {
