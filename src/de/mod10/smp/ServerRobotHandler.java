@@ -10,8 +10,8 @@ public class ServerRobotHandler {
 		grid = new Grid();
 	}
 
-	public void addRobot() {
-		RobotHandler robot = grid.registerRobotHandler(new Position(2, 5));
+	public RobotHandler addRobot() {
+		return grid.registerRobotHandler(new Position(2, 5));
 	}
 
 	public void step() {

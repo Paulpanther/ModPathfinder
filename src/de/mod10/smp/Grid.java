@@ -78,7 +78,8 @@ public class Grid {
 	}
 
 	public PositionType posType(Position pos) {
-		if (pos.getX() == 0 || (pos.getY() == 5 || pos.getY() == 4 || pos.getY() == 0) && pos.getX() % 3 == 0)
+		if (pos.getX() == 0 || (pos.getY() == 5 || pos.getY() == 4 || pos.getY() == 0) && pos.getX() % 3 == 0 ||
+				(pos.getY() > 6 && pos.getY() % 3 == 2 && pos.getX() % 3 == 0))
 			return PositionType.BLOCK;
 		if (pos.getY() < 6 && pos.getX() % 3 != 2 || pos.getY() < 5)
 			return PositionType.STATION;
@@ -101,12 +102,20 @@ public class Grid {
 		return pos.getY() == 5 && pos.getX() % 3 == 0 && pos.getX() != 0;
 	}
 
+	public boolean isStationStart(Position pos) {
+		return pos.getY() == 5 && pos.getX() % 3 == 1;
+	}
+
 	public RobotHandler isRobot(Position pos) {
 		for (RobotHandler robot : handler) {
 			if (robot.pos().equals(pos))
 				return robot;
 		}
 		return null;
+	}
+
+	public boolean isValidMove(Position pos) {
+		return isStationStart(pos) || isBattery(pos) || posType(pos) == PositionType.WAYPOINT;
 	}
 
 	public List<RobotHandler> getRobots() {

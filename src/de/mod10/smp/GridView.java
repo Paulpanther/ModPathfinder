@@ -2,12 +2,13 @@ package de.mod10.smp;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.awt.geom.Line2D;
 import java.util.Arrays;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class GridView extends JFrame {
@@ -16,6 +17,12 @@ public class GridView extends JFrame {
 	private static final int DRAW_SIZE_X = 810, DRAW_SIZE_Y = 810;
 
 	private ServerRobotHandler handler;
+
+	private RobotHandler selected;
+	private Position mouseOver;
+	private boolean moving = false;
+	private ScheduledExecutorService service;
+	private ScheduledFuture future;
 
 
 	private GridView() {
@@ -29,15 +36,35 @@ public class GridView extends JFrame {
 		draw.setPreferredSize(new Dimension(810, 810));
 		add(draw, new GridBagConstraints());
 
+		addKeyListener(new KeyHandler());
+
+		service = Executors.newSingleThreadScheduledExecutor();
+
 		getContentPane().setBackground(new Color(42, 42, 42));
 		setSize(SIZE);
 		setTitle("Robot Drive Simulator 3000");
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		setVisible(true);
+	}
 
-		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-		service.scheduleAtFixedRate(this::step, 0, 100, TimeUnit.MILLISECONDS);
+	private void reset() {
+		if (moving)
+			toggleMove();
+		selected = null;
+		handler.getRobots().clear();
+		repaint();
+	}
+
+	private void toggleMove() {
+		moving = !moving;
+		if (moving) {
+			future = service.scheduleAtFixedRate(this::step, 0, 100, TimeUnit.MILLISECONDS);
+			System.out.println("Moving");
+		} else {
+			future.cancel(true);
+			System.out.println("Stopped");
+		}
 	}
 
 	private void step() {
@@ -45,8 +72,19 @@ public class GridView extends JFrame {
 		repaint();
 	}
 
+	private Color getRandomRobotColor() {
+		Color[] colors = {
+				new Color(231, 76, 60),
+				new Color(52, 152, 219),
+				new Color(26, 188, 156),
+				new Color(155, 89, 182)
+		};
+		Random r = new Random();
+		return colors[r.nextInt(colors.length)];
+	}
+
 	private void addRobot() {
-		handler.addRobot();
+		handler.addRobot().setColor(getRandomRobotColor());
 	}
 
 	public static void main(String[] args) {
@@ -62,6 +100,7 @@ public class GridView extends JFrame {
 			ratio_y = DRAW_SIZE_Y / Grid.SIZE_Y;
 
 			addMouseListener(new MouseHandler());
+			addMouseMotionListener(new MouseHandler());
 		}
 
 		@Override
@@ -85,7 +124,7 @@ public class GridView extends JFrame {
 				fillBlock(g, new Color(155, 212, 255), pos);
 			} if (handler.getGrid().posType(pos) == PositionType.BLOCK) {
 				fillBlock(g, Color.BLACK, pos);
-			}  if (handler.getGrid().isFill(pos)) {
+			} if (handler.getGrid().isFill(pos)) {
 				fillBlock(g, Color.MAGENTA, pos);
 			} if (handler.getGrid().posType(pos) == PositionType.CROSSROADS) {
 				fillBlock(g, new Color(220, 220, 220), pos);
@@ -103,6 +142,14 @@ public class GridView extends JFrame {
 			RobotHandler robot = handler.getGrid().isRobot(pos);
 			if (robot != null) {
 				drawRobot(g, robot, pos);
+			}
+
+			if (mouseOver != null && mouseOver.equals(pos)) {
+				if (handler.getGrid().isValidMove(pos))
+					g.setColor(Color.BLACK);
+				else
+					g.setColor(Color.GRAY);
+				g.fillRect((int) ((pos.getX() + .29) * ratio_x), (int) (DRAW_SIZE_Y - (pos.getY()+.72) * ratio_y), (int) (ratio_x*.5), (int) (ratio_y*.5));
 			}
 		}
 
@@ -134,11 +181,24 @@ public class GridView extends JFrame {
 			int[] iys = Arrays.stream(ys).mapToInt(y -> (int) (DRAW_SIZE_Y - (pos.getY() + y) * ratio_y)).toArray();
 
 			g.fillPolygon(ixs, iys, 3);
+
+			if (selected != null && robot == selected) {
+				g.setColor(Color.BLACK);
+				g.fillRect((int) ((pos.getX() + .29) * ratio_x), (int) (DRAW_SIZE_Y - (pos.getY()+.72) * ratio_y), (int) (ratio_x*.5), (int) (ratio_y*.5));
+			}
+		}
+
+		private void fillRect(Graphics g, Position pos, Dimension size) {
+			g.fillRect((int) (pos.getX() * ratio_x), (int) (DRAW_SIZE_Y - (pos.getY()+1) * ratio_y), (int) (size.getWidth() * ratio_x), (int) (size.getHeight() * ratio_y));
+		}
+
+		private void fillRect(Graphics g, Position pos) {
+			fillRect(g, pos, new Dimension(1, 1));
 		}
 
 		private void fillBlock(Graphics g, Color color, Position pos) {
 			g.setColor(color);
-			g.fillRect((int) (pos.getX() * ratio_x), (int) (DRAW_SIZE_Y - (pos.getY()+1) * ratio_y), (int) ratio_x, (int) ratio_y);
+			fillRect(g, pos);
 		}
 
 		private void drawBorder(Graphics2D g, Color color, Position pos, Orientation o) {
@@ -177,7 +237,7 @@ public class GridView extends JFrame {
 		}
 	}
 
-	private class MouseHandler implements MouseListener {
+	private class MouseHandler implements MouseListener, MouseMotionListener {
 
 		private float ratio_x, ratio_y;
 
@@ -189,7 +249,23 @@ public class GridView extends JFrame {
 		@Override
 		public void mouseClicked(MouseEvent e) {
 			Position target = new Position((int) (e.getX() / ratio_x), (int) ((DRAW_SIZE_Y - e.getY()) / ratio_y));
-			handler.getRobots().get(0).driveTo(target);
+
+			Grid grid = handler.getGrid();
+			RobotHandler robot = grid.isRobot(target);
+			if (robot != null) {
+				selected = robot;
+				repaint();
+			} else if (grid.isValidMove(target)) {
+				if (selected != null) {
+					selected.driveTo(target);
+				}
+			}
+		}
+
+		@Override
+		public void mouseMoved(MouseEvent e) {
+			mouseOver = new Position((int) (e.getX() / ratio_x), (int) ((DRAW_SIZE_Y - e.getY()) / ratio_y));
+			repaint();
 		}
 
 		@Override
@@ -203,5 +279,32 @@ public class GridView extends JFrame {
 
 		@Override
 		public void mouseExited(MouseEvent e) {}
+
+		@Override
+		public void mouseDragged(MouseEvent e) {}
+	}
+
+	private class KeyHandler implements KeyListener {
+
+		@Override
+		public void keyPressed(KeyEvent e) {
+			if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+				toggleMove();
+			} else if (e.getKeyCode() == KeyEvent.VK_A) {
+				addRobot();
+			} else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+				if (moving)
+					toggleMove();
+				System.exit(0);
+			} else if (e.getKeyCode() == KeyEvent.VK_R) {
+				reset();
+			}
+		}
+
+		@Override
+		public void keyTyped(KeyEvent e) {}
+
+		@Override
+		public void keyReleased(KeyEvent e) {}
 	}
 }
