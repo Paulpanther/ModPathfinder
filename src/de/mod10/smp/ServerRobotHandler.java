@@ -1,5 +1,7 @@
 package de.mod10.smp;
 
+import de.mod10.smp.helper.Position;
+
 import java.util.List;
 
 public class ServerRobotHandler {
@@ -10,9 +12,8 @@ public class ServerRobotHandler {
 		grid = new Grid();
 	}
 
-	public void addRobot() {
-		RobotHandler robot = grid.registerRobotHandler(new Position(2, 5));
-		robot.driveTo(new Position(30, 30));
+	public RobotHandler addRobot() {
+		return grid.registerRobotHandler(new Position(2, 5));
 	}
 
 	public void step() {

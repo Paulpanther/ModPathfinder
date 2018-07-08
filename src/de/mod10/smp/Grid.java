@@ -1,6 +1,12 @@
 package de.mod10.smp;
 
+import de.mod10.smp.helper.Direction;
+import de.mod10.smp.helper.Orientation;
+import de.mod10.smp.helper.Position;
+import de.mod10.smp.helper.PositionType;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -22,6 +28,92 @@ public class Grid {
 		RobotHandler robot = new RobotHandler(this, initPos);
 		handler.add(robot);
 		return robot;
+	}
+
+	public boolean blockedWaypoint(Position pos, Orientation orient, Direction dir) {
+		if (posType(pos) == PositionType.WAYPOINT) {
+			Position cross = nextCrossroad(pos, orient);
+			Orientation to = Orientation.getRotatedOrientation(orient, dir);
+			Position waypoint = crossroadWaypointIn(cross, to);
+			return isRobot(waypoint) != null;
+
+		} else if (posType(pos) == PositionType.CROSSROADS) {
+			Position cross = onCrossroad(pos);
+			Orientation to = Orientation.getRotatedOrientation(orient, dir);
+			Position waypoint = crossroadWaypointOut(cross, to);
+			return isRobot(waypoint) != null;
+		}
+		return false;
+	}
+
+	public boolean blockedCrossroadFront(Position pos, Orientation orient) {
+		Position cross = nextCrossroad(pos, orient);
+
+		for (Position crossPosDelta : crossroadDeltaPositions()) {
+			Position crossPos = Position.add(crossPosDelta, cross);
+			if (!crossPos.equals(pos) && isRobot(crossPos) != null)
+				return true;
+		}
+		return false;
+	}
+
+	private Position[] crossroadDeltaPositions() {
+		return new Position[] {
+				new Position(1, 0),
+				new Position(1, 1),
+				new Position(0, 1),
+				new Position(0, 0)
+		};
+	}
+
+	private Position crossroadWaypointIn(Position cross, Orientation orient) {
+		Position[] delta = {
+				new Position(-2, 0),
+				new Position(-1, 2),
+				new Position(1, 1),
+				new Position(0, -1)
+		};
+		return Position.add(cross, delta[orient.getValue()]);
+	}
+
+	private Position crossroadWaypointOut(Position cross, Orientation orient) {
+		Position[] delta = {
+				new Position(-2, 1),
+				new Position(0, 2),
+				new Position(1, 0),
+				new Position(-1, -1)
+		};
+		return Position.add(cross, delta[orient.getValue()]);
+	}
+
+	private Position onCrossroad(Position pos) {
+		return new Position(pos.getX() / 3 * 3 + 2, pos.getY() / 3 * 3);
+	}
+
+	private Position nextCrossroad(Position pos, Orientation orient) {
+		Position next = nextPosition(pos, orient);
+		return new Position(next.getX() / 3 * 3 + 2, next.getY() / 3 * 3);
+	}
+
+	public Position nextPosition(Position pos, Orientation orient) {
+		Position delta;
+		switch (orient) {
+			case NORTH:
+				delta = new Position(0, 1);
+				break;
+			case WEST:
+				delta = new Position(-1, 0);
+				break;
+			case EAST:
+				delta = new Position(1, 0);
+				break;
+			case SOUTH:
+				delta = new Position(0, -1);
+				break;
+			default:
+				throw new IllegalStateException();
+		}
+		return Position.add(delta, pos);
 	}
 
 	public boolean[] areNeighborsBlocked(Position pos) {
@@ -76,7 +168,8 @@ public class Grid {
 	}
 
 	public PositionType posType(Position pos) {
-		if (pos.getX() == 0 || (pos.getY() == 5 || pos.getY() == 4 || pos.getY() == 0) && pos.getX() % 3 == 0)
+		if (pos.getX() == 0 || (pos.getY() == 5 || pos.getY() == 4 || pos.getY() == 0) && pos.getX() % 3 == 0 ||
+				(pos.getY() > 6 && pos.getY() % 3 == 2 && pos.getX() % 3 == 0))
 			return PositionType.BLOCK;
 		if (pos.getY() < 6 && pos.getX() % 3 != 2 || pos.getY() < 5)
 			return PositionType.STATION;
@@ -85,10 +178,6 @@ public class Grid {
 		if (pos.getY() == 5 && pos.getX() % 3 == 2)
 			return PositionType.WAYPOINT;
 		return PositionType.CROSSROADS;
-	}
-
-	public List<RobotHandler> getRobots() {
-		return handler;
 	}
 
 	public boolean isBattery(Position pos) {
@@ -101,5 +190,85 @@ public class Grid {
 
 	public boolean isFill(Position pos) {
 		return pos.getY() == 5 && pos.getX() % 3 == 0 && pos.getX() != 0;
+	}
+
+	public boolean isStationStart(Position pos) {
+		return pos.getY() == 5 && pos.getX() % 3 == 1;
+	}
+
+	public RobotHandler isRobot(Position pos) {
+		for (RobotHandler robot : handler) {
+			if (robot.pos().equals(pos))
+				return robot;
+		}
+		return null;
+	}
+
+	public int getBatteryCount() {
+		return (int) Math.ceil(SIZE_X / 3f) * 3;
+	}
+
+	public RobotHandler spawnRobotOnBattery(int bat) {
+		Position batPos = getBatteryPosition(bat);
+		return registerRobotHandler(batPos);
+	}
+
+	public void moveRobotToBattery(int bat, RobotHandler robot) {
+		Position station = getStationOfBattery(bat);
+		robot.driveInStation(station, getBatteryPosition(bat));
+	}
+
+	public void moveRobotToFill(int fill, RobotHandler robot) {
+		Position station = getStationOfFill(fill);
+		robot.driveInStation(station, getFillPosition(fill));
+	}
+
+	public void moveRobotToDrop(int drop, RobotHandler robot) {
+		robot.driveTo(getDropPosition(drop));
+	}
+
+	public int getDropCount() {
+		return dropsPerColumn() * dropsPerRow();
+	}
+
+	private Position getDropPosition(int drop) {
+		return new Position(drop / dropsPerColumn() + 3, (drop % dropsPerColumn()) + 9);
+	}
+
+	private int dropsPerColumn() {
+		return (int) (Math.ceil(Math.max(SIZE_Y - 9, 0) / 3f));
+	}
+
+	private int dropsPerRow() {
+		return (int) (Math.ceil(SIZE_X / 3f) - 1);
+	}
+
+	public int getFillCount() {
+		return (int) Math.ceil(SIZE_X / 3f) - 1;
+	}
+
+	public Position getFillPosition(int fill) {
+		return new Position(fill * 3 + 2, 5);
+	}
+
+	private Position getStationOfFill(int fill) {
+		return new Position(fill * 3 + 1, 5);
+	}
+
+	private Position getBatteryPosition(int bat) {
+		return new Position(bat / 3 * 3, (bat % 3) + 1);
+	}
+
+	private Position getStationOfBattery(int bat) {
+		Position batPos = getBatteryPosition(bat);
+		return new Position(batPos.getX() + 1, 5);
+	}
+
+	public boolean isValidMove(Position pos) {
+		return isStationStart(pos) || isBattery(pos) || posType(pos) == PositionType.WAYPOINT;
+	}
+
+	public List<RobotHandler> getRobots() {
+		return handler;
 	}
 }

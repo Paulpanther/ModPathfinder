@@ -1,6 +1,8 @@
 package de.mod10.smp;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import de.mod10.smp.helper.*;
+
+import java.awt.*;
 
 /**
  * @author Paul
@@ -10,9 +12,12 @@ public class RobotHandler implements IRobotActors, SensorData {
 
 	private Robot robot;
 	private Grid grid;
+	private Color color = Color.RED;
 
 	private Position pos;
 	private Orientation orientation = Orientation.NORTH;
+	private Position target, station;
+	private boolean driving = false;
 
 
 	public RobotHandler(Grid grid, Position initPos) {
@@ -23,12 +28,39 @@ public class RobotHandler implements IRobotActors, SensorData {
 		robot.sensorEvent(this);
 	}
 
+	public Color getColor() {
+		return color;
+	}
+
+	public void setColor(Color color) {
+		this.color = color;
+	}
+
 	public void driveTo(Position pos) {
 		robot.driveTo(pos);
+		driving = true;
+	}
+
+	public boolean isDriving() {
+		return driving;
 	}
 
 	public void step() {
+		if (pos.equals(station)) {
+			driveTo(target);
+			station = null;
+		}
+		if (pos.equals(target)) {
+			driving = false;
+		}
 		robot.step();
+	}
+
+	public void driveInStation(Position station, Position next) {
+		driving = true;
+		this.station = station;
+		this.target = next;
+		driveTo(station);
 	}
 
 	@Override
@@ -63,8 +95,7 @@ public class RobotHandler implements IRobotActors, SensorData {
 
 	@Override
 	public void startUnload() {
-		// TODO
-		throw new NotImplementedException();
+		System.out.println("Unload");
 	}
 
 	@Override
@@ -85,52 +116,50 @@ public class RobotHandler implements IRobotActors, SensorData {
 	@Override
 	public boolean blockedFront() {
 		boolean[] neighbors = grid.areNeighborsBlocked(pos);
-		return getRotatedNeighbor(neighbors, Direction.AHEAD, orientation);
+		return getRotatedNeighbor(neighbors, Direction.AHEAD, orientation) ||
+				grid.isRobot(grid.nextPosition(pos, orientation)) != null;
 	}
 
 	@Override
 	public boolean blockedLeft() {
 		boolean[] neighbors = grid.areNeighborsBlocked(pos);
-		return getRotatedNeighbor(neighbors, Direction.LEFT, orientation);
+		return getRotatedNeighbor(neighbors, Direction.LEFT, orientation) ||
+				grid.isRobot(grid.nextPosition(pos, Orientation.rotateLeft(orientation))) != null;
 	}
 
 	@Override
 	public boolean blockedRight() {
 		boolean[] neighbors = grid.areNeighborsBlocked(pos);
-		return getRotatedNeighbor(neighbors, Direction.RIGHT, orientation);
+		return getRotatedNeighbor(neighbors, Direction.RIGHT, orientation) ||
+				grid.isRobot(grid.nextPosition(pos, Orientation.rotateRight(orientation))) != null;
 	}
 
 	@Override
 	public boolean blockedWaypointFront() {
-		// TODO
-		throw new NotImplementedException();
+		return grid.blockedWaypoint(pos, orientation, Direction.AHEAD);
 	}
 
 	@Override
 	public boolean blockedWaypointLeft() {
-		// TODO
-		throw new NotImplementedException();
+		return grid.blockedWaypoint(pos, orientation, Direction.LEFT);
 	}
 
 	@Override
 	public boolean blockedWaypointRight() {
-		// TODO
-		throw new NotImplementedException();
+		return grid.blockedWaypoint(pos, orientation, Direction.RIGHT);
 	}
 
 	@Override
 	public boolean blockedCrossroadFront() {
-		// TODO
-		throw new NotImplementedException();
+		return grid.blockedCrossroadFront(pos, orientation);
 	}
 
 	@Override
 	public boolean blockedCrossroadRight() {
-		// TODO
-		throw new NotImplementedException();
+		return grid.blockedCrossroadFront(pos, Orientation.rotateRight(orientation));
 	}
 
-	public static boolean getRotatedNeighbor(boolean[] neighbors, Direction dir, Orientation orientation) {
+	private static boolean getRotatedNeighbor(boolean[] neighbors, Direction dir, Orientation orientation) {
 		int dirIndex = dir.getValue();
 		int orientIndex = orientation.getValue();
 		return neighbors[(dirIndex + orientIndex) % 4];

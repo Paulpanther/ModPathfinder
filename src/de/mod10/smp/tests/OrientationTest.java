@@ -1,5 +1,8 @@
-package de.mod10.smp;
+package de.mod10.smp.tests;
 
+import de.mod10.smp.helper.Direction;
+import de.mod10.smp.helper.Orientation;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -8,7 +11,7 @@ class OrientationTest {
 
 	@Test
 	void getRelativeDirection() {
-		assertEquals(Direction.AHEAD, Orientation.getRelativeDirection(Orientation.NORTH, Orientation.NORTH));
+		Assertions.assertEquals(Direction.AHEAD, Orientation.getRelativeDirection(Orientation.NORTH, Orientation.NORTH));
 		assertEquals(Direction.LEFT, Orientation.getRelativeDirection(Orientation.NORTH, Orientation.WEST));
 		assertEquals(Direction.BEHIND, Orientation.getRelativeDirection(Orientation.NORTH, Orientation.SOUTH));
 		assertEquals(Direction.RIGHT, Orientation.getRelativeDirection(Orientation.NORTH, Orientation.EAST));

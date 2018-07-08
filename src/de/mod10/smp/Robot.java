@@ -1,5 +1,7 @@
 package de.mod10.smp;
 
+import de.mod10.smp.helper.*;
+
 /**
  * @author Paul
  * @since 04.07.2018
@@ -7,8 +9,8 @@ package de.mod10.smp;
 public class Robot implements ISensorInfo, IRobotActorInfo {
 
 	private SensorData data;
-	private RobotState state = RobotState.DEFAULT;
-	private Position target;
+	private RobotState state = RobotState.FROM_BATTERY;
+	private Position target = null;
 	private IRobotActors actor;
 
 
@@ -18,28 +20,17 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 
 	public void driveTo(Position target) {
 		this.target = target;
-
-		// TODO Uncomment this for Tests
-
-//		if (data != null) {
-//			while (!target.equals(data.pos())) {
-//				step();
-//			}
-//		}
 	}
 
 	public void step() {
-		if (target == null)
+		if (target == null || target.equals(data.pos()))
 			return;
 
-		boolean moved = false;
-
+		// Set States
 		PositionType type = data.posType();
-		if (type == PositionType.CROSSROADS && state == RobotState.DEFAULT)
-			state = RobotState.FIRST_STEP_ON_CROSS;
-		else if (type == PositionType.WAYPOINT && state == RobotState.ON_CROSS)
-			state  = RobotState.DEFAULT;
-		if (type == PositionType.STATION && state == RobotState.DEFAULT) {
+		if (type == PositionType.WAYPOINT)
+			state  = RobotState.WAYPOINT;
+		if (type == PositionType.STATION && state == RobotState.WAYPOINT) {
 			Position delta = getDeltaPosition();
 
 			while (data.posOrientation() != Orientation.SOUTH)
@@ -52,34 +43,88 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 			}
 		}
 
-		if (state != RobotState.TO_BATTERY && state != RobotState.STATION && state != RobotState.FROM_BATTERY) {
-			Position subTarget = getSubTarget();
+		if (inStationState()) {
+			stationControl();
+		} else if (state == RobotState.WAYPOINT) {
+			Position delta = getDeltaPosition();
+			Direction dir = Orientation.getRelativeDirection(data.posOrientation(), targetOrientation());
+			if (delta.getX() + delta.getY() == -1 && delta.getX() * delta.getY() == 0 || dir == Direction.BEHIND) {
+				actor.turnLeft();
+				if (!data.blockedFront())
+					actor.driveForward();
+				actor.turnLeft();
+			} else {
+				if (!data.blockedFront() && isCrossroadOpen()) {
+					actor.driveForward();
+					state = RobotState.CROSS_RIGHT_UP_LEFT;
+				}
+			}
+		} else if (state == RobotState.CROSS_RIGHT_UP_LEFT) {
+			Direction dir = Orientation.getRelativeDirection(data.posOrientation(), targetOrientation());
 
-			Direction dir = targetDirection(subTarget);
-			switch (dir) {
-				case AHEAD:
+			if (!blockedWaypoint(dir)) {
+				if (dir == Direction.RIGHT) {
+					actor.turnRight();
 					if (!data.blockedFront()) {
 						actor.driveForward();
-						moved = true;
+						state = RobotState.WAYPOINT;
 					}
-					break;
-				case LEFT:
-					actor.turnLeft();
-					break;
-				case BEHIND:
-					actor.turnRight();
-				case RIGHT:
-					actor.turnRight();
-					break;
+				} else {
+					if (!data.blockedFront()) {
+						actor.driveForward();
+						state = RobotState.CROSS_LEFT_UP;
+					}
+				}
 			}
-		} else
-			stationControll();
-
-		if (state == RobotState.FIRST_STEP_ON_CROSS && moved)
-			state = RobotState.ON_CROSS;
+		} else if (state == RobotState.CROSS_LEFT_UP) {
+			Direction dir = Orientation.getRelativeDirection(data.posOrientation(), targetOrientation());
+			if (dir == Direction.AHEAD) {
+				if (!data.blockedFront()) {
+					actor.driveForward();
+					state = RobotState.WAYPOINT;
+				}
+			} else {
+				actor.turnLeft();
+				if (!data.blockedFront()) {
+					actor.driveForward();
+				}
+			}
+		}
 	}
 
-	public void stationControll() {
+	private boolean isCrossroadOpen() {
+		boolean left = data.blockedWaypointLeft();
+		boolean ahead = data.blockedWaypointFront();
+		boolean right = data.blockedWaypointRight();
+
+		if (!left && !ahead && !right) {
+			return true;
+		} else if (left && ahead && right) {
+			throw new IllegalStateException("DEADLOCK");
+		} else if (ahead && !left && !right) {
+			Orientation orient = data.posOrientation();
+			return orient == Orientation.EAST || orient == Orientation.NORTH;
+		} else return !right;
+	}
+
+	private boolean blockedWaypoint(Direction dir) {
+		switch (dir) {
+			case AHEAD:
+				return data.blockedWaypointFront();
+			case LEFT:
+				return data.blockedWaypointLeft();
+			case RIGHT:
+				return data.blockedCrossroadRight();
+			default:
+				return false;
+		}
+	}
+
+	private boolean inStationState() {
+		return state == RobotState.STATION || state == RobotState.TO_BATTERY || state == RobotState.FROM_BATTERY || state == RobotState.ON_BATTERY;
+	}
+
+	private void stationControl() {
 		Position delta = getDeltaPosition();
 
 		if (state == RobotState.TO_BATTERY) {
@@ -109,116 +154,8 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 		}
 	}
 
-	public Position getSubTarget() {
-		Position current = data.pos();
+	public Orientation targetOrientation() {
 		Position delta = getDeltaPosition();
-
-		if (isTargetBeneath(delta)) {
-			return Position.add(getNextDeltaInOrientation(Orientation.SOUTH), current);
-		}
-		if ((state == RobotState.DEFAULT || state == RobotState.ON_CROSS) && data.posType() == PositionType.WAYPOINT) {
-			Orientation orient = targetOrientation(delta);
-			Direction dir = Orientation.getRelativeDirection(data.posOrientation(), orient);
-			return Position.add(calculateNextDeltaWayPoints(data.posOrientation())[dir.getValue()], data.pos());
-		} else if (state == RobotState.FIRST_STEP_ON_CROSS) {
-			Orientation toTarget = targetOrientation(delta);
-			Direction dir = Orientation.getRelativeDirection(data.posOrientation(), toTarget);
-			switch (dir) {
-				case AHEAD:
-				case RIGHT:
-					return Position.add(getNextDeltaInOrientation(toTarget), current);
-				default:
-					return Position.add(getNextDeltaInOrientation(toTarget), current);
-			}
-		} else if ((state == RobotState.DEFAULT || state == RobotState.ON_CROSS) && data.posType() == PositionType.CROSSROADS) {
-			return Position.add(getNextDeltaInOrientation(targetOrientation(delta)), current);
-		}
-
-		throw new IllegalStateException();
-	}
-
-	private Position getNextDeltaInOrientation(Orientation orient) {
-		switch (orient) {
-			case NORTH:
-				return new Position(0, 1);
-			case WEST:
-				return new Position(-1, 0);
-			case EAST:
-				return new Position(1, 0);
-			case SOUTH:
-				return new Position(0, -1);
-			default:
-				throw new IllegalStateException();
-		}
-	}
-
-	private Position[] calculateNextDeltaWayPoints(Orientation orient) {
-		switch (orient) {
-			case NORTH:
-				return new Position[]{
-						new Position(0, 3),
-						new Position(1, 1),
-						new Position(-1, 0),
-						new Position(-2, 2)
-				};
-			case WEST:
-				return new Position[]{
-						new Position(-3, 0),
-						new Position(-1, 1),
-						new Position(0, -1),
-						new Position(-2, -2),
-				};
-			case SOUTH:
-				return new Position[]{
-						new Position(0, -3),
-						new Position(-1, -1),
-						new Position(1, 0),
-						new Position(2, -2)
-				};
-			case EAST:
-				return new Position[]{
-						new Position(3, 0),
-						new Position(1, -1),
-						new Position(0, 1),
-						new Position(2, 2)
-				};
-			default:
-				throw new IllegalStateException();
-		}
-	}
-
-	public Direction targetDirection(Position target) {
-		Position current = data.pos();
-		int delta_x = target.getX() - current.getX();
-		int delta_y = target.getY() - current.getY();
-		Position delta = new Position(delta_x, delta_y);
-
-		switch (state) {
-			case DEFAULT:
-			case ON_CROSS:
-				Orientation orient = targetOrientation(delta);
-				return Orientation.getRelativeDirection(data.posOrientation(), orient);
-			case FIRST_STEP_ON_CROSS:
-				orient = targetOrientation(delta);
-				Direction dir = Orientation.getRelativeDirection(data.posOrientation(), orient);
-
-				switch (dir) {
-					case AHEAD:
-					case RIGHT:
-						return dir;
-					default:
-						return Direction.AHEAD;
-				}
-			default:
-				throw new IllegalStateException();
-		}
-	}
-
-	private boolean isTargetBeneath(Position delta) {
-		return delta.getX() == 0 && delta.getY() == -1;
-	}
-
-	public Orientation targetOrientation(Position delta) {
 
 		if (delta.getY() > 0)
 			return Orientation.NORTH;
@@ -237,18 +174,25 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 		return new Position(target.getX() - current.getX(), target.getY() - current.getY());
 	}
 
+	private enum RobotState {
+		WAYPOINT, CROSS_RIGHT_UP_LEFT, CROSS_LEFT_UP, STATION, TO_BATTERY, ON_BATTERY, FROM_BATTERY
+	}
+
 	@Override
 	public void unloaded() {
 
 	}
 
+	public void unload() {
+		actor.startUnload();
+	}
+
+	public void stop() {
+		target = null;
+	}
+
 	@Override
 	public void sensorEvent(SensorData data) {
 		this.data = data;
-	}
-
-
-	private enum RobotState {
-		IDLE, DEFAULT, FIRST_STEP_ON_CROSS, ON_CROSS, STATION, TO_BATTERY, FROM_BATTERY
 	}
 }

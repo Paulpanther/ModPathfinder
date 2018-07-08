@@ -1,5 +1,7 @@
-package de.mod10.smp;
+package de.mod10.smp.tests;
 
+import de.mod10.smp.Grid;
+import de.mod10.smp.helper.Position;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
