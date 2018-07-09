@@ -14,18 +14,22 @@ public class RobotHandler implements IRobotActors, SensorData {
 	private Grid grid;
 	private Color color = Color.RED;
 
-	private Position pos;
-	private Orientation orientation = Orientation.NORTH;
+	private Position pos, from;
+	private Orientation orientation = Orientation.EAST;
 	private Position target, station;
 	private boolean driving = false;
 
 
-	public RobotHandler(Grid grid, Position initPos) {
+	public RobotHandler(Grid grid, Position initPos, int id) {
 		this.grid = grid;
 		this.pos = initPos;
 
-		robot = new Robot(this);
+		robot = new Robot(this, id);
 		robot.sensorEvent(this);
+	}
+
+	public Position getTarget() {
+		return target;
 	}
 
 	public Color getColor() {
@@ -37,6 +41,8 @@ public class RobotHandler implements IRobotActors, SensorData {
 	}
 
 	public void driveTo(Position pos) {
+		target = pos;
+		from = this.pos.copy();
 		robot.driveTo(pos);
 		driving = true;
 	}
@@ -59,8 +65,8 @@ public class RobotHandler implements IRobotActors, SensorData {
 	public void driveInStation(Position station, Position next) {
 		driving = true;
 		this.station = station;
-		this.target = next;
 		driveTo(station);
+		this.target = next;
 	}
 
 	@Override
@@ -163,5 +169,20 @@ public class RobotHandler implements IRobotActors, SensorData {
 		int dirIndex = dir.getValue();
 		int orientIndex = orientation.getValue();
 		return neighbors[(dirIndex + orientIndex) % 4];
+	}
+
+	public String print() {
+		StringBuilder out = new StringBuilder();
+		out.append("Robot:\n");
+		out.append("\tPos: ").append(pos).append("\n");
+		out.append("\tTarget: ").append(target).append("\n");
+		out.append(robot.print());
+		out.append("\tOrientation: ").append(orientation).append("\n");
+		out.append("\tOn Pos Type: ").append(posType()).append("\n");
+		if (posType() == PositionType.WAYPOINT)
+			out.append("\tWaypoints: ").append(blockedWaypointLeft()).append(" ")
+					.append(blockedWaypointFront()).append(" ").append(blockedWaypointRight()).append("\n");
+		out.append("\n");
+		return String.valueOf(out);
 	}
 }

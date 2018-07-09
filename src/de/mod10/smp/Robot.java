@@ -12,10 +12,12 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 	private RobotState state = RobotState.FROM_BATTERY;
 	private Position target = null;
 	private IRobotActors actor;
+	private int id;
 
 
-	public Robot(IRobotActors actor) {
+	public Robot(IRobotActors actor, int id) {
 		this.actor = actor;
+		this.id = id;
 	}
 
 	public void driveTo(Position target) {
@@ -27,7 +29,7 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 			return;
 
 		// Set States
-		PositionType type = data.posType();
+   		PositionType type = data.posType();
 		if (type == PositionType.WAYPOINT)
 			state  = RobotState.WAYPOINT;
 		if (type == PositionType.STATION && state == RobotState.WAYPOINT) {
@@ -48,18 +50,23 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 		} else if (state == RobotState.WAYPOINT) {
 			Position delta = getDeltaPosition();
 			Direction dir = Orientation.getRelativeDirection(data.posOrientation(), targetOrientation());
+
+			// U-Turn
 			if (delta.getX() + delta.getY() == -1 && delta.getX() * delta.getY() == 0 || dir == Direction.BEHIND) {
-				actor.turnLeft();
-				if (!data.blockedFront())
+				if (!data.blockedLeft()) {
+					actor.turnLeft();
 					actor.driveForward();
-				actor.turnLeft();
-			} else {
-				if (!data.blockedFront() && isCrossroadOpen()) {
+					actor.turnLeft();
+				}
+
+
+			} else { // Normal behaviour
+				if (!data.blockedFront() && /*!data.blockedCrossroadFront() &&*/ isCrossroadOpen()) {
 					actor.driveForward();
 					state = RobotState.CROSS_RIGHT_UP_LEFT;
 				}
 			}
-		} else if (state == RobotState.CROSS_RIGHT_UP_LEFT) {
+ 		} else if (state == RobotState.CROSS_RIGHT_UP_LEFT) {
 			Direction dir = Orientation.getRelativeDirection(data.posOrientation(), targetOrientation());
 
 			if (!blockedWaypoint(dir)) {
@@ -100,10 +107,8 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 		if (!left && !ahead && !right) {
 			return true;
 		} else if (left && ahead && right) {
-			throw new IllegalStateException("DEADLOCK");
-		} else if (ahead && !left && !right) {
 			Orientation orient = data.posOrientation();
-			return orient == Orientation.EAST || orient == Orientation.NORTH;
+			return orient == Orientation.NORTH;
 		} else return !right;
 	}
 
@@ -114,14 +119,14 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 			case LEFT:
 				return data.blockedWaypointLeft();
 			case RIGHT:
-				return data.blockedCrossroadRight();
+				return data.blockedWaypointRight();
 			default:
 				return false;
 		}
 	}
 
 	private boolean inStationState() {
-		return state == RobotState.STATION || state == RobotState.TO_BATTERY || state == RobotState.FROM_BATTERY || state == RobotState.ON_BATTERY;
+		return state == RobotState.STATION || state == RobotState.TO_BATTERY || state == RobotState.FROM_BATTERY;
 	}
 
 	private void stationControl() {
@@ -175,7 +180,7 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 	}
 
 	private enum RobotState {
-		WAYPOINT, CROSS_RIGHT_UP_LEFT, CROSS_LEFT_UP, STATION, TO_BATTERY, ON_BATTERY, FROM_BATTERY
+		WAYPOINT, CROSS_RIGHT_UP_LEFT, CROSS_LEFT_UP, STATION, TO_BATTERY, FROM_BATTERY
 	}
 
 	@Override
@@ -194,5 +199,14 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 	@Override
 	public void sensorEvent(SensorData data) {
 		this.data = data;
+	}
+
+	public String print() {
+		StringBuilder out = new StringBuilder();
+		out.append("\tID: ").append(id).append("\n");
+		out.append("\tState: ").append(state).append("\n");
+		if (state == RobotState.WAYPOINT)
+			out.append("\tWaypoints Open: ").append(isCrossroadOpen()).append("\n");
+		return String.valueOf(out);
 	}
 }

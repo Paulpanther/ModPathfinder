@@ -52,6 +52,10 @@ public class Position {
 				y == position.y;
 	}
 
+	public Position copy() {
+		return new Position(x, y);
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(x, y);

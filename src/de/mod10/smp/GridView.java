@@ -119,6 +119,12 @@ public class GridView extends JFrame {
 					drawBlock(g, new Position(x, y));
 				}
 			}
+
+			Graphics2D g2d = (Graphics2D) g;
+			for (RobotHandler robot : handler.getRobots()) {
+				if (robot.getTarget() != null)
+					drawTargetLine(g2d, robot.pos(), robot.getTarget());
+			}
 		}
 
 		private void drawBlock(Graphics g, Position pos) {
@@ -128,7 +134,7 @@ public class GridView extends JFrame {
 				fillBlock(g, new Color(155, 212, 255), pos);
 			} if (handler.getGrid().posType(pos) == PositionType.BLOCK) {
 				fillBlock(g, Color.BLACK, pos);
-			} if (handler.getGrid().isFill(pos)) {
+			} if (handler.getGrid().isFillBlock(pos)) {
 				fillBlock(g, Color.MAGENTA, pos);
 			} if (handler.getGrid().posType(pos) == PositionType.CROSSROADS) {
 				fillBlock(g, new Color(220, 220, 220), pos);
@@ -190,6 +196,12 @@ public class GridView extends JFrame {
 				g.setColor(Color.BLACK);
 				g.fillRect((int) ((pos.getX() + .29) * ratio_x), (int) (DRAW_SIZE_Y - (pos.getY()+.72) * ratio_y), (int) (ratio_x*.5), (int) (ratio_y*.5));
 			}
+		}
+
+		private void drawTargetLine(Graphics2D g, Position pos, Position target) {
+			g.setColor(Color.RED);
+			g.drawLine((int) ((target.getX() + .5) * ratio_x), (int) (DRAW_SIZE_Y - (target.getY()+.5) * ratio_y),
+					(int) ((pos.getX() + .5) * ratio_x), (int) (DRAW_SIZE_Y - (pos.getY()+.5) * ratio_y));
 		}
 
 		private void fillRect(Graphics g, Position pos, Dimension size) {
@@ -258,6 +270,9 @@ public class GridView extends JFrame {
 			RobotHandler robot = grid.isRobot(target);
 			if (robot != null) {
 				selected = robot;
+
+				System.out.println(robot.print());
+
 				repaint();
 			} else if (grid.isValidMove(target)) {
 				if (selected != null) {

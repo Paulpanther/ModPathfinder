@@ -6,7 +6,6 @@ import de.mod10.smp.helper.Position;
 import de.mod10.smp.helper.PositionType;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -24,8 +23,8 @@ public class Grid {
 		handler = new ArrayList<>();
 	}
 
-	public RobotHandler registerRobotHandler(Position initPos) {
-		RobotHandler robot = new RobotHandler(this, initPos);
+	public RobotHandler registerRobotHandler(Position initPos, int id) {
+		RobotHandler robot = new RobotHandler(this, initPos, id);
 		handler.add(robot);
 		return robot;
 	}
@@ -59,8 +58,8 @@ public class Grid {
 
 	private Position[] crossroadDeltaPositions() {
 		return new Position[] {
-				new Position(1, 0),
-				new Position(1, 1),
+				new Position(-1, 0),
+				new Position(-1, 1),
 				new Position(0, 1),
 				new Position(0, 0)
 		};
@@ -188,8 +187,12 @@ public class Grid {
 		return pos.getY() > 6 && pos.getY() % 3 == 2 && pos.getX() % 3 == 0 && pos.getX() != 0;
 	}
 
-	public boolean isFill(Position pos) {
+	public boolean isFillBlock(Position pos) {
 		return pos.getY() == 5 && pos.getX() % 3 == 0 && pos.getX() != 0;
+	}
+
+	public boolean isFillPosition(Position pos) {
+		return pos.getY() == 5 && pos.getX() % 3 == 2;
 	}
 
 	public boolean isStationStart(Position pos) {
@@ -208,9 +211,9 @@ public class Grid {
 		return (int) Math.ceil(SIZE_X / 3f) * 3;
 	}
 
-	public RobotHandler spawnRobotOnBattery(int bat) {
+	public RobotHandler spawnRobotOnBattery(int bat, int id) {
 		Position batPos = getBatteryPosition(bat);
-		return registerRobotHandler(batPos);
+		return registerRobotHandler(batPos, id);
 	}
 
 	public void moveRobotToBattery(int bat, RobotHandler robot) {
@@ -231,8 +234,12 @@ public class Grid {
 		return dropsPerColumn() * dropsPerRow();
 	}
 
-	private Position getDropPosition(int drop) {
-		return new Position(drop / dropsPerColumn() + 3, (drop % dropsPerColumn()) + 9);
+	public Position getDropPosition(int drop) {
+		return new Position(drop / dropsPerColumn() * 3 + 3, (drop % dropsPerColumn()) * 3 + 9);
+	}
+
+	public Position getDropBlock(int drop) {
+		return new Position(drop / dropsPerColumn() * 3 + 3, (drop % dropsPerColumn()) * 3 + 8);
 	}
 
 	private int dropsPerColumn() {
@@ -249,6 +256,10 @@ public class Grid {
 
 	public Position getFillPosition(int fill) {
 		return new Position(fill * 3 + 2, 5);
+	}
+
+	public int getFillByPosition(Position pos) {
+		return pos.getX() / 3;
 	}
 
 	private Position getStationOfFill(int fill) {
