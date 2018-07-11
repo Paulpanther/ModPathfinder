@@ -94,7 +94,7 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 			}
 
 			if (isDeadlock()) {
-				if (data.posOrientation() != Orientation.WEST && !data.blockedRight()) {
+				if (data.posOrientation() != Orientation.WEST && data.posOrientation() != Orientation.NORTH && !data.blockedRight()) {
 					actor.turnRight();
 					actor.driveForward();
 				}
