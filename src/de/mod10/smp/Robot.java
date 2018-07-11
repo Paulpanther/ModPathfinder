@@ -78,16 +78,25 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 
 			if (!blockedWaypoint(dir)) {
 				if (dir == Direction.RIGHT) {
-					actor.turnRight();
-					if (!data.blockedFront()) {
+					if (!data.blockedRight()) {
+						actor.turnRight();
 						actor.driveForward();
 						state = RobotState.WAYPOINT;
+						return;
 					}
 				} else {
 					if (!data.blockedFront()) {
 						actor.driveForward();
 						state = RobotState.CROSS_LEFT_UP;
+						return;
 					}
+				}
+			}
+
+			if (isDeadlock()) {
+				if (data.posOrientation() != Orientation.WEST && !data.blockedRight()) {
+					actor.turnRight();
+					actor.driveForward();
 				}
 			}
 		} else if (state == RobotState.CROSS_LEFT_UP) {
@@ -110,14 +119,33 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 		boolean left = data.blockedWaypointLeft();
 		boolean ahead = data.blockedWaypointFront();
 		boolean right = data.blockedWaypointRight();
+		boolean cross = data.blockedCrossroadFront();
 
 		Direction next = getNextDirection();
+		Orientation orient = data.posOrientation();
 
-		if (data.posOrientation() == Orientation.EAST && next != Direction.RIGHT && data.blockedCrossroadFront() && right)
+
+
+		if (right && ahead && left && orient == Orientation.NORTH)
+			return true;
+
+		if (next != Direction.RIGHT && right)
 			return false;
 
-		return next != Direction.LEFT || !data.blockedWaypointFront() &&
-				((!left && !ahead && !right) || data.posOrientation() == Orientation.NORTH) ;
+		if (next != Direction.LEFT)
+			return true;
+
+		if (!cross) {
+			if (!left && !ahead) {
+				return true;
+			} else
+				return orient == Orientation.NORTH;
+		}
+		return false;
+	}
+
+	private boolean isDeadlock() {
+		return data.blockedLeft() && data.blockedFront() && state == RobotState.CROSS_RIGHT_UP_LEFT;
 	}
 
 	private Direction getNextDirection() {
