@@ -174,7 +174,7 @@ public class Grid {
 	}
 
 	public PositionType posType(Position pos) {
-		if (pos.getX() == 0 || (pos.getY() == 5 || pos.getY() == 4 || pos.getY() == 0) && pos.getX() % 3 == 0 ||
+		if (pos.getX() == 0 && (pos.getY() < 1 || pos.getY() > 3) || (pos.getY() == 5 || pos.getY() == 4 || pos.getY() == 0) && pos.getX() % 3 == 0 ||
 				(pos.getY() > 6 && pos.getY() % 3 == 2 && pos.getX() % 3 == 0))
 			return PositionType.BLOCK;
 		if (pos.getY() < 6 && pos.getX() % 3 != 2 || pos.getY() < 5)

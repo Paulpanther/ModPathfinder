@@ -84,8 +84,16 @@ public class GridView extends JFrame {
 		handler.addDebugRobot(new Position(6, 13), new Position(6, 12), Orientation.WEST, Robot.RobotState.WAYPOINT).setColor(getRandomRobotColor());
 		handler.addDebugRobot(new Position(6, 12), new Position(1, 5), Orientation.EAST, Robot.RobotState.WAYPOINT).setColor(getRandomRobotColor());
 
-		handler.addDebugRobot(new Position(4, 12), null, Orientation.EAST, Robot.RobotState.CROSS_RIGHT_UP_LEFT).setColor(getRandomRobotColor());
+		// handler.addDebugRobot(new Position(4, 12), null, Orientation.EAST, Robot.RobotState.CROSS_RIGHT_UP_LEFT).setColor(getRandomRobotColor());
+		repaint();
+	}
 
+	private void addDebugRobots2() {
+		handler.addDebugRobot(new Position(7, 16), new Position(7, 5), Orientation.SOUTH, Robot.RobotState.CROSS_RIGHT_UP_LEFT).setColor(getRandomRobotColor());
+		handler.addDebugRobot(new Position(7, 15), new Position(12, 15), Orientation.EAST, Robot.RobotState.CROSS_RIGHT_UP_LEFT).setColor(getRandomRobotColor());
+		handler.addDebugRobot(new Position(8, 16), new Position(3, 15), Orientation.WEST, Robot.RobotState.CROSS_RIGHT_UP_LEFT).setColor(getRandomRobotColor());
+		handler.addDebugRobot(new Position(8, 15), new Position(9, 18), Orientation.NORTH, Robot.RobotState.CROSS_RIGHT_UP_LEFT).setColor(getRandomRobotColor());
+		repaint();
 	}
 
 	private Color getRandomRobotColor() {
@@ -326,15 +334,22 @@ public class GridView extends JFrame {
 				reset();
 			} else if (e.getKeyCode() == KeyEvent.VK_X) {
 				addDebugRobots1();
+			} else if (e.getKeyCode() == KeyEvent.VK_Y) {
+				addDebugRobots2();
 			} else if (e.getKeyCode() == KeyEvent.VK_UP) {
-				toggleMove();
-				timeMillis += 10;
-				toggleMove();
+				changeSpeed(-1);
 			} else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-				toggleMove();
-				timeMillis = Math.max(10, timeMillis - 10);
-				toggleMove();
+				changeSpeed(1);
 			}
+		}
+
+		private void changeSpeed(int dir) {
+			boolean wasMoving = moving;
+			if (moving)
+				toggleMove();
+			timeMillis = Math.max(10, timeMillis + 10 * dir);
+			if (wasMoving)
+				toggleMove();
 		}
 
 		@Override

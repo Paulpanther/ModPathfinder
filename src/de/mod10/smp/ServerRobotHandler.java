@@ -2,6 +2,7 @@ package de.mod10.smp;
 
 import de.mod10.smp.helper.Orientation;
 import de.mod10.smp.helper.Position;
+import de.mod10.smp.helper.PositionType;
 
 import java.util.List;
 import java.util.Random;
@@ -19,7 +20,7 @@ public class ServerRobotHandler {
 	}
 
 	public RobotHandler addDebugRobot(Position pos, Position target, Orientation orient, Robot.RobotState state) {
-		return grid.addDebugRobot(pos, target, orient, state, lastID);
+		return grid.addDebugRobot(pos, target, orient, state, lastID++);
 	}
 
 	public RobotHandler addRobot() {
@@ -30,7 +31,7 @@ public class ServerRobotHandler {
 		for (RobotHandler robot : grid.getRobots()) {
 			if (!robot.isDriving()) {
 				Position robPos = robot.pos();
-				if (grid.isFillPosition(robPos) || grid.isBattery(robPos)) {
+				if (grid.isFillPosition(robPos) || grid.posType(robPos) == PositionType.STATION) {
 
 					if (grid.isFillPosition(robPos)) {
 						int fill = grid.getFillByPosition(robPos);
