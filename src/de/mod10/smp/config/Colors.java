@@ -12,42 +12,42 @@ public class Colors {
 	/** Block Colors **/
 	public static final Color
 
-	// WHITE
-	WAYPOINT = new Color(240, 240, 240),
+	// GREY
+	CROSSROAD = new Color(107, 107, 107),
 
 	// LIGHT GREY
-	CROSSROAD = new Color(220, 220, 220),
+	WAYPOINT = new Color(170, 170, 170),
 
-	// ORANGE
-	DROP = new Color(255, 200, 0),
+	// DARK GREY
+	DROP = new Color(50, 50, 50),
 
-	// BLACK
-	BLOCK = new Color(0, 0, 0),
+	// COOL ORANGE
+	BLOCK = new Color(224, 152, 40),
 
 	// LIGHT BLUE
-	STATION = new Color(155, 212, 255),
+	STATION = new Color(205, 201, 203),
 
 	// YELLOW
-	BATTERY = new Color(255, 255, 0),
+	BATTERY = new Color(255, 232, 119),
 
-	// MAGENTA
-	FILL =  new Color(255, 0, 255);
+	// LIGHT LIGHT ORANGE
+	FILL =  new Color(255, 202, 123);
 
 
 	/** Robot Colors **/
 	public static final Color[] ROBOTS = {
 
-			// RED
-			new Color(231, 76, 60),
+			// WARM ORANGE
+			new Color(255, 143, 0),
 
 			// BLUE
-			new Color(52, 152, 219),
+			//new Color(52, 152, 219),
 
 			// GREEN
-			new Color(26, 188, 156),
+			//new Color(26, 188, 156),
 
 			// PURPLE
-			new Color(155, 89, 182)
+			//new Color(155, 89, 182)
 	};
 
 
