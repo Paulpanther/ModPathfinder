@@ -137,7 +137,7 @@ public class GridView extends JFrame {
 			Graphics2D g2d = (Graphics2D) g;
 			for (RobotHandler robot : handler.getRobots()) {
 				if (robot.getTarget() != null)
-					drawTargetLine(g2d, robot.pos(), robot.getTarget());
+					drawTargetLine(g2d, robot.pos(), robot.getTarget(), robot == selected);
 			}
 		}
 
@@ -213,8 +213,11 @@ public class GridView extends JFrame {
 			}
 		}
 
-		private void drawTargetLine(Graphics2D g, Position pos, Position target) {
-			g.setColor(Colors.LINE);
+		private void drawTargetLine(Graphics2D g, Position pos, Position target, boolean highlight) {
+			if (highlight)
+				g.setColor(Colors.LINE_SELECTED);
+			else
+				g.setColor(Colors.LINE);
 			g.drawLine((int) ((target.getX() + .5) * ratio_x), (int) (DRAW_SIZE_Y - (target.getY()+.5) * ratio_y),
 					(int) ((pos.getX() + .5) * ratio_x), (int) (DRAW_SIZE_Y - (pos.getY()+.5) * ratio_y));
 		}

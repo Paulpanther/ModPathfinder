@@ -54,8 +54,11 @@ public class Colors {
 	/** Mark Color **/
 	public static final Color
 
+	// GREY
+	LINE = new Color(42, 42, 42, 50),
+
 	// RED
-	LINE = new Color(255, 0, 0),
+	LINE_SELECTED = new Color(255, 42, 42),
 
 	// BLACK
 	SELECTED = new Color(0, 0, 0),
