@@ -1,5 +1,6 @@
 package de.mod10.smp;
 
+import de.mod10.smp.helper.Orientation;
 import de.mod10.smp.helper.Position;
 
 import java.util.List;
@@ -17,8 +18,11 @@ public class ServerRobotHandler {
 		fillQueue = new int[grid.getFillCount()];
 	}
 
-	public RobotHandler addRobot() {
+	public RobotHandler addDebugRobot(Position pos, Position target, Orientation orient, Robot.RobotState state) {
+		return grid.addDebugRobot(pos, target, orient, state, lastID);
+	}
 
+	public RobotHandler addRobot() {
 		return grid.spawnRobotOnBattery(0, lastID++);
 	}
 

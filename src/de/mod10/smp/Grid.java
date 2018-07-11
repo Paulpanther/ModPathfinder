@@ -29,6 +29,13 @@ public class Grid {
 		return robot;
 	}
 
+	public RobotHandler addDebugRobot(Position pos, Position target, Orientation orient, Robot.RobotState state, int id) {
+		RobotHandler robot = new RobotHandler(this, pos, id, orient, state);
+		robot.driveTo(target);
+		handler.add(robot);
+		return robot;
+	}
+
 	public boolean blockedWaypoint(Position pos, Orientation orient, Direction dir) {
 		if (posType(pos) == PositionType.WAYPOINT) {
 			Position cross = nextCrossroad(pos, orient);

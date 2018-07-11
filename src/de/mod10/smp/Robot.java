@@ -15,6 +15,12 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 	private int id;
 
 
+	public Robot(IRobotActors actor, int id, RobotState state) {
+		this.actor = actor;
+		this.id = id;
+		this.state = state;
+	}
+
 	public Robot(IRobotActors actor, int id) {
 		this.actor = actor;
 		this.id = id;
@@ -33,7 +39,7 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 		if (type == PositionType.WAYPOINT)
 			state  = RobotState.WAYPOINT;
 		if (type == PositionType.STATION && state == RobotState.WAYPOINT) {
-			Position delta = getDeltaPosition();
+			Position delta = getDeltaPosition(data.pos(), target);
 
 			while (data.posOrientation() != Orientation.SOUTH)
 				actor.turnLeft();
@@ -48,8 +54,8 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 		if (inStationState()) {
 			stationControl();
 		} else if (state == RobotState.WAYPOINT) {
-			Position delta = getDeltaPosition();
-			Direction dir = Orientation.getRelativeDirection(data.posOrientation(), targetOrientation());
+			Position delta = getDeltaPosition(data.pos(), target);
+			Direction dir = Orientation.getRelativeDirection(data.posOrientation(), targetOrientation(data.pos(), target));
 
 			// U-Turn
 			if (delta.getX() + delta.getY() == -1 && delta.getX() * delta.getY() == 0 || dir == Direction.BEHIND) {
@@ -57,9 +63,10 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 					actor.turnLeft();
 					actor.driveForward();
 					actor.turnLeft();
+				} else if (!data.blockedFront()) {
+					actor.driveForward();
+					state = RobotState.CROSS_RIGHT_UP_LEFT;
 				}
-
-
 			} else { // Normal behaviour
 				if (!data.blockedFront() && /*!data.blockedCrossroadFront() &&*/ isCrossroadOpen()) {
 					actor.driveForward();
@@ -67,7 +74,7 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 				}
 			}
  		} else if (state == RobotState.CROSS_RIGHT_UP_LEFT) {
-			Direction dir = Orientation.getRelativeDirection(data.posOrientation(), targetOrientation());
+			Direction dir = Orientation.getRelativeDirection(data.posOrientation(), targetOrientation(data.pos(), target));
 
 			if (!blockedWaypoint(dir)) {
 				if (dir == Direction.RIGHT) {
@@ -84,15 +91,15 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 				}
 			}
 		} else if (state == RobotState.CROSS_LEFT_UP) {
-			Direction dir = Orientation.getRelativeDirection(data.posOrientation(), targetOrientation());
+			Direction dir = Orientation.getRelativeDirection(data.posOrientation(), targetOrientation(data.pos(), target));
 			if (dir == Direction.AHEAD) {
 				if (!data.blockedFront()) {
 					actor.driveForward();
 					state = RobotState.WAYPOINT;
 				}
 			} else {
-				actor.turnLeft();
-				if (!data.blockedFront()) {
+				if (!data.blockedLeft()) {
+					actor.turnLeft();
 					actor.driveForward();
 				}
 			}
@@ -104,12 +111,33 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 		boolean ahead = data.blockedWaypointFront();
 		boolean right = data.blockedWaypointRight();
 
-		if (!left && !ahead && !right) {
-			return true;
-		} else if (left && ahead && right) {
-			Orientation orient = data.posOrientation();
-			return orient == Orientation.NORTH;
-		} else return !right;
+		Direction next = getNextDirection();
+
+		if (data.posOrientation() == Orientation.EAST && next != Direction.RIGHT && data.blockedCrossroadFront() && right)
+			return false;
+
+		return next != Direction.LEFT || !data.blockedWaypointFront() &&
+				((!left && !ahead && !right) || data.posOrientation() == Orientation.NORTH) ;
+	}
+
+	private Direction getNextDirection() {
+		Position next = Position.add(data.pos(), getNextDeltaInOrientation(data.posOrientation()));
+		return Orientation.getRelativeDirection(data.posOrientation(), targetOrientation(next, target));
+	}
+
+	private Position getNextDeltaInOrientation(Orientation orient) {
+		switch (orient) {
+			case NORTH:
+				return new Position(0, 1);
+			case WEST:
+				return new Position(-1, 0);
+			case EAST:
+				return new Position(1, 0);
+			case SOUTH:
+				return new Position(0, -1);
+			default:
+				throw new IllegalStateException();
+		}
 	}
 
 	private boolean blockedWaypoint(Direction dir) {
@@ -130,7 +158,7 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 	}
 
 	private void stationControl() {
-		Position delta = getDeltaPosition();
+		Position delta = getDeltaPosition(data.pos(), target);
 
 		if (state == RobotState.TO_BATTERY) {
 			if (delta.getX() == -1 && delta.getY() == 0 && data.posOrientation() != Orientation.WEST) {
@@ -159,8 +187,8 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 		}
 	}
 
-	public Orientation targetOrientation() {
-		Position delta = getDeltaPosition();
+	public Orientation targetOrientation(Position current, Position target) {
+		Position delta = getDeltaPosition(current, target);
 
 		if (delta.getY() > 0)
 			return Orientation.NORTH;
@@ -174,12 +202,11 @@ public class Robot implements ISensorInfo, IRobotActorInfo {
 			throw new IllegalStateException();
 	}
 
-	private Position getDeltaPosition() {
-		Position current = data.pos();
+	private Position getDeltaPosition(Position current, Position target) {
 		return new Position(target.getX() - current.getX(), target.getY() - current.getY());
 	}
 
-	private enum RobotState {
+	public enum RobotState {
 		WAYPOINT, CROSS_RIGHT_UP_LEFT, CROSS_LEFT_UP, STATION, TO_BATTERY, FROM_BATTERY
 	}
 

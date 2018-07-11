@@ -20,6 +20,8 @@ public class GridView extends JFrame {
 	private static final Dimension SIZE = new Dimension(900, 900);
 	private static final int DRAW_SIZE_X = 810, DRAW_SIZE_Y = 810;
 
+	private int timeMillis = 100;
+
 	private ServerRobotHandler handler;
 
 	private RobotHandler selected;
@@ -31,7 +33,7 @@ public class GridView extends JFrame {
 
 	private GridView() {
 		handler = new ServerRobotHandler();
-		addRobot();
+		// addRobot();
 
 		setLayout(new GridBagLayout());
 
@@ -63,7 +65,7 @@ public class GridView extends JFrame {
 	private void toggleMove() {
 		moving = !moving;
 		if (moving) {
-			future = service.scheduleAtFixedRate(this::step, 0, 100, TimeUnit.MILLISECONDS);
+			future = service.scheduleAtFixedRate(this::step, 0, timeMillis, TimeUnit.MILLISECONDS);
 			System.out.println("Moving");
 		} else {
 			future.cancel(true);
@@ -74,6 +76,14 @@ public class GridView extends JFrame {
 	private void step() {
 		handler.step();
 		repaint();
+	}
+
+	private void addDebugRobots1() {
+		handler.addDebugRobot(new Position(6, 13), new Position(6, 12), Orientation.WEST, Robot.RobotState.WAYPOINT).setColor(getRandomRobotColor());
+		handler.addDebugRobot(new Position(6, 12), new Position(1, 5), Orientation.EAST, Robot.RobotState.WAYPOINT).setColor(getRandomRobotColor());
+
+		handler.addDebugRobot(new Position(4, 12), null, Orientation.EAST, Robot.RobotState.CROSS_RIGHT_UP_LEFT).setColor(getRandomRobotColor());
+
 	}
 
 	private Color getRandomRobotColor() {
@@ -317,6 +327,16 @@ public class GridView extends JFrame {
 				System.exit(0);
 			} else if (e.getKeyCode() == KeyEvent.VK_R) {
 				reset();
+			} else if (e.getKeyCode() == KeyEvent.VK_X) {
+				addDebugRobots1();
+			} else if (e.getKeyCode() == KeyEvent.VK_UP) {
+				toggleMove();
+				timeMillis = Math.min(100, timeMillis - 100);
+				toggleMove();
+			} else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+				toggleMove();
+				timeMillis += 100;
+				toggleMove();
 			}
 		}
 

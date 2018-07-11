@@ -20,6 +20,15 @@ public class RobotHandler implements IRobotActors, SensorData {
 	private boolean driving = false;
 
 
+	public RobotHandler(Grid grid, Position initPos, int id, Orientation orientation, Robot.RobotState state) {
+		this.orientation = orientation;
+		this.grid = grid;
+		this.pos = initPos;
+
+		robot = new Robot(this, id, state);
+		robot.sensorEvent(this);
+	}
+
 	public RobotHandler(Grid grid, Position initPos, int id) {
 		this.grid = grid;
 		this.pos = initPos;
