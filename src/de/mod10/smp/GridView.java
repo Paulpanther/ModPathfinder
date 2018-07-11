@@ -1,5 +1,6 @@
 package de.mod10.smp;
 
+import de.mod10.smp.config.Colors;
 import de.mod10.smp.helper.Orientation;
 import de.mod10.smp.helper.Position;
 import de.mod10.smp.helper.PositionType;
@@ -38,7 +39,7 @@ public class GridView extends JFrame {
 		setLayout(new GridBagLayout());
 
 		DrawPane draw = new DrawPane();
-		draw.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2, true));
+		draw.setBorder(BorderFactory.createLineBorder(Colors.BORDER, 2, true));
 		draw.setPreferredSize(new Dimension(810, 810));
 		add(draw, new GridBagConstraints());
 
@@ -46,7 +47,7 @@ public class GridView extends JFrame {
 
 		service = Executors.newSingleThreadScheduledExecutor();
 
-		getContentPane().setBackground(new Color(42, 42, 42));
+		getContentPane().setBackground(Colors.BACKGROUND);
 		setSize(SIZE);
 		setTitle("Robot Drive Simulator 3000");
 		setLocationRelativeTo(null);
@@ -65,6 +66,7 @@ public class GridView extends JFrame {
 	private void toggleMove() {
 		moving = !moving;
 		if (moving) {
+			System.out.println(timeMillis);
 			future = service.scheduleAtFixedRate(this::step, 0, timeMillis, TimeUnit.MILLISECONDS);
 			System.out.println("Moving");
 		} else {
@@ -87,14 +89,8 @@ public class GridView extends JFrame {
 	}
 
 	private Color getRandomRobotColor() {
-		Color[] colors = {
-				new Color(231, 76, 60),
-				new Color(52, 152, 219),
-				new Color(26, 188, 156),
-				new Color(155, 89, 182)
-		};
 		Random r = new Random();
-		return colors[r.nextInt(colors.length)];
+		return Colors.ROBOTS[r.nextInt(Colors.ROBOTS.length)];
 	}
 
 	private void addRobot() {
@@ -121,7 +117,7 @@ public class GridView extends JFrame {
 		protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
 
-			g.setColor(Color.BLACK);
+			g.setColor(Colors.BLOCK);
 			g.fillRect(0, 0, DRAW_SIZE_X, DRAW_SIZE_Y);
 
 			for (int x = 0; x < Grid.SIZE_X; x++) {
@@ -141,22 +137,22 @@ public class GridView extends JFrame {
 			Graphics2D g2d = (Graphics2D) g;
 
 			if (handler.getGrid().posType(pos) == PositionType.STATION) {
-				fillBlock(g, new Color(155, 212, 255), pos);
+				fillBlock(g, Colors.STATION, pos);
 			} if (handler.getGrid().posType(pos) == PositionType.BLOCK) {
-				fillBlock(g, Color.BLACK, pos);
+				fillBlock(g, Colors.BLOCK, pos);
 			} if (handler.getGrid().isFillBlock(pos)) {
-				fillBlock(g, Color.MAGENTA, pos);
+				fillBlock(g, Colors.FILL, pos);
 			} if (handler.getGrid().posType(pos) == PositionType.CROSSROADS) {
-				fillBlock(g, new Color(220, 220, 220), pos);
+				fillBlock(g, Colors.CROSSROAD, pos);
 			} if (handler.getGrid().posType(pos) == PositionType.WAYPOINT) {
-				fillBlock(g, new Color(240, 240, 240), pos);
+				fillBlock(g, Colors.WAYPOINT, pos);
 			} if (handler.getGrid().isDrop(pos)) {
-				fillBlock(g, Color.ORANGE, pos);
+				fillBlock(g, Colors.DROP, pos);
 			} if (handler.getGrid().isBattery(pos)) {
-				fillBlock(g, Color.YELLOW, pos);
-				drawBorder(g2d, Color.BLACK, pos, Orientation.NORTH);
-				drawBorder(g2d, Color.BLACK, pos, Orientation.WEST);
-				drawBorder(g2d, Color.BLACK, pos, Orientation.SOUTH);
+				fillBlock(g, Colors.BATTERY, pos);
+				drawBorder(g2d, Colors.BLOCK, pos, Orientation.NORTH);
+				drawBorder(g2d, Colors.BLOCK, pos, Orientation.WEST);
+				drawBorder(g2d, Colors.BLOCK, pos, Orientation.SOUTH);
 			}
 
 			RobotHandler robot = handler.getGrid().isRobot(pos);
@@ -166,9 +162,9 @@ public class GridView extends JFrame {
 
 			if (mouseOver != null && mouseOver.equals(pos)) {
 				if (handler.getGrid().isValidMove(pos))
-					g.setColor(Color.BLACK);
+					g.setColor(Colors.MOUSE_VALID);
 				else
-					g.setColor(Color.GRAY);
+					g.setColor(Colors.MOUSE_INVALID);
 				g.fillRect((int) ((pos.getX() + .29) * ratio_x), (int) (DRAW_SIZE_Y - (pos.getY()+.72) * ratio_y), (int) (ratio_x*.5), (int) (ratio_y*.5));
 			}
 		}
@@ -202,14 +198,15 @@ public class GridView extends JFrame {
 
 			g.fillPolygon(ixs, iys, 3);
 
+			// Draw Selected
 			if (selected != null && robot == selected) {
-				g.setColor(Color.BLACK);
+				g.setColor(Colors.SELECTED);
 				g.fillRect((int) ((pos.getX() + .29) * ratio_x), (int) (DRAW_SIZE_Y - (pos.getY()+.72) * ratio_y), (int) (ratio_x*.5), (int) (ratio_y*.5));
 			}
 		}
 
 		private void drawTargetLine(Graphics2D g, Position pos, Position target) {
-			g.setColor(Color.RED);
+			g.setColor(Colors.LINE);
 			g.drawLine((int) ((target.getX() + .5) * ratio_x), (int) (DRAW_SIZE_Y - (target.getY()+.5) * ratio_y),
 					(int) ((pos.getX() + .5) * ratio_x), (int) (DRAW_SIZE_Y - (pos.getY()+.5) * ratio_y));
 		}
@@ -331,11 +328,11 @@ public class GridView extends JFrame {
 				addDebugRobots1();
 			} else if (e.getKeyCode() == KeyEvent.VK_UP) {
 				toggleMove();
-				timeMillis = Math.min(100, timeMillis - 100);
+				timeMillis += 10;
 				toggleMove();
 			} else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
 				toggleMove();
-				timeMillis += 100;
+				timeMillis = Math.max(10, timeMillis - 10);
 				toggleMove();
 			}
 		}
