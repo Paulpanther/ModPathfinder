@@ -3,11 +3,14 @@
 Simulator um den Driver Mechanismus zu testen.
 
 ## Einsatz
-In `Robot` kann der Drive implementiert werden. 
-Es kann bisher nur ein Robot fahren.
-Getestet wird mit JUnit5 in `RobotDriveTest`.
+In `Robot` ist der Drive implementiert. 
+Es können mehrere Roboter fahren.
 
-## Mehrere Roboter TODO
-- [ ] Statt in einen Schritt durch driveTo zu gehen einzelne Steps
-- [ ] Methoden in `RobotHandler` implementieren
-- [ ] Helfermethoden in `Grid` 
+## Tastaturbelegung
+- `space`: Start/ Stopp
+- `A`: Neuen Roboter hinzufügen
+- `R`: Reload
+- `X`: Debug Case 1
+- `Y`: Debug Case 2
+- `Up`: Schneller
+- `Down`: Langsamer
